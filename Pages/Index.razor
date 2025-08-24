@@ -1,0 +1,179 @@
+﻿@page "/"
+@using Magazynek.Entities
+@using Magazynek.Services
+@using Magazynek.Data
+
+@inject IShippingEntryService ShippingEntryService
+@inject IProductService       ProductService
+
+
+<PageTitle>Ilości</PageTitle>
+
+<div class="container mt-4">
+    <div class="mb-3 searcher gap-4">
+        <input class="form-control bg-dark text-light" type="text" placeholder="Szukaj..." @bind="searchTerm" />
+        <button class="btn btn-success" @onclick="AddNew">
+            <i class="bi bi-plus-circle"></i>
+        </button>
+        <button class="btn btn-light" @onclick="RefreshValues">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
+    </div>
+    <table class="table table-dark table-striped table-hover align-middle">
+        <thead class="table-dark border-bottom border-light">
+            <tr>
+                <th>Nazwa</th>
+                <th>Obudowa</th>
+                <th>Ilość</th>
+                @* <th>Wartość</th> *@
+                <th>TME ID</th>
+                <th>Dostępność</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (ShippingEntryViewModel shippingEntry in shippingEntries)
+            {
+                <tr>
+                    <td>@shippingEntry.product.name</td>
+                    <td>@shippingEntry.product.package</td>
+                    <td>@shippingEntry.quantity</td>
+                    @* <td>@shippingEntry.stockValue.ToString("0.00")</td> *@
+                    <td>@shippingEntry.product.tmeID</td>
+                    <td class="@(shippingEntry.stock == 0? "text-danger":"")">
+                        @shippingEntry.stock
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (editingEntry != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content text-light bg-dark">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Dodaj dostawę</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CloseAddModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <EditForm Model="editingEntry" OnValidSubmit="SaveEntry">
+                            <label class="form-label">Wybierz produkt</label>
+                            <InputText class="form-control mb-2" placeholder="Szukaj..." 
+                                @bind-Value="productSearch" 
+                                @oninput="e => { productSearch = e.Value?.ToString() ?? string.Empty; FilterProducts(); }" 
+                            />
+                            <select class="form-select" @onchange="OnProductSelected">
+                                @foreach (var product in filteredProducts)
+                                {
+                                    <option value="@product.id">@product.name</option>
+                                }
+                            </select>
+                            <div class="mb-3">
+                                <label class="form-label">Ilość</label>
+                                <InputNumber class="form-control" @bind-Value="editingEntry.quantity" min="0" step="1" />
+                            </div>
+                            <button type="submit" class="btn btn-success">Save</button>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (isLoading)
+    {
+         <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content text-light bg-dark">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Pobieranie danych...</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>Gotowe: @currentRefreshingIndex / @shippingEntries.Count</p>
+                        <div class="loading-overlay">
+                            <div class="spinner-border text-light" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+
+@code {
+    private string productSearch = string.Empty;
+    private string searchTerm = string.Empty;
+
+    private List<ShippingEntryViewModel> shippingEntries = new();
+    private ShippingEntryViewModel? editingEntry = null;
+
+    private List<Product> allProducts = new();
+    private List<Product> filteredProducts = new();
+
+    private bool isLoading = false;
+    private int currentRefreshingIndex = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        allProducts = await ProductService.Get();
+        shippingEntries = (await ShippingEntryService.GetModels()).OrderBy(se => se.product.name).ToList();
+
+        FilterProducts();
+    }
+    private void AddNew() => editingEntry = ShippingEntryViewModel.Empty();
+    private void CloseAddModal() => editingEntry = null;
+    private async void SaveEntry(EditContext context)
+    {
+        if(editingEntry == null) return;
+
+        if(editingEntry.product.id == Guid.Empty && filteredProducts.Count > 0)
+            editingEntry.product = filteredProducts[0];
+
+        ShippingEntryViewModel newEntry = await ShippingEntryService.UpdateInfoOrInsertNew(editingEntry);
+        if(shippingEntries.Any(x=>x.id == newEntry.id))
+        {
+            var index = shippingEntries.FindIndex(x => x.id == newEntry.id);
+            shippingEntries[index] = newEntry;
+        } 
+        else shippingEntries.Add(newEntry);
+        editingEntry = null;
+
+        shippingEntries = (await ShippingEntryService.GetModels()).OrderBy(se => se.product.name).ToList();
+        
+        StateHasChanged();
+    }
+    private async Task RefreshValues()
+    {
+        isLoading = true;
+
+        for(int i = 0; i < shippingEntries.Count; i++)
+        {
+            shippingEntries[i] = await ShippingEntryService.RefreshValue(shippingEntries[i]);
+
+            currentRefreshingIndex++;
+            StateHasChanged();
+        }
+        
+        isLoading = false;
+    }
+    private void OnProductSelected(ChangeEventArgs e)
+    {
+        if(editingEntry == null) return;
+
+        var selectedId = Guid.Parse(e.Value?.ToString() ?? Guid.Empty.ToString());
+        var selectedProduct = allProducts.FirstOrDefault(p => p.id == selectedId);
+
+        if (selectedProduct != null) editingEntry.product = selectedProduct;
+    }
+    private void FilterProducts()
+    {
+        filteredProducts = allProducts
+            .Where(p => string.IsNullOrWhiteSpace(productSearch) || p.name.Contains(productSearch, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(p=>p.name)
+            .ToList();
+    }
+}

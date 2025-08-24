@@ -1,0 +1,21 @@
+{
+    "name": ".NET Core Remote Launch - Framework Dependent (console)",
+    "type": "coreclr",
+    "request": "launch",
+    "program": "~/dotnet/dotnet",
+    "args": [
+        "./MyConsoleApp.dll"
+    ],
+        "cwd": "~/Magazynek/Magazynek",
+        "stopAtEntry": false,
+        "console": "internalConsole",
+        "pipeTransport": {
+            "pipeCwd": "${workspaceRoot}",
+            "pipeProgram": "/usr/bin/ssh",
+            "pipeArgs": [
+                "-T", "-i", "mysshkeyfile",
+                "osmc@192.168.100.196"
+            ],
+            "debuggerPath": "~/vsdbg/vsdbg"
+            }
+    }
