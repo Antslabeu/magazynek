@@ -124,7 +124,7 @@
     private void AddRow() {
         if (editingProject == null) return;
 
-        editingProject.AddItem(null, 0);
+        editingProject.AddItem(product: null, quantity: 0);
     }
     private async void Save(EditContext context)
     {
@@ -134,9 +134,9 @@
 
         Project? existingProject = projects.FirstOrDefault(x => x.id == newOne.id);
         if(existingProject == null) projects.Add(newOne);
-
         else {
             existingProject.name = newOne.name;
+            existingProject.SetItems(newOne.items);
         }
         
         editingProject = null;

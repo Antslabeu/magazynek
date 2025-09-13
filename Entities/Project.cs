@@ -12,9 +12,7 @@ public class ProjectItem
 
     [Required] public int quantity { get; set; }
 
-    [Column("projectid")] [ForeignKey("Project")] public Guid projectID { get; private set; }
-
-    public Project Project { get; private set; }
+    [Column("projectid")] [Required] public Guid projectID { get; private set; }
 
 
     protected ProjectItem() {
@@ -22,7 +20,6 @@ public class ProjectItem
         this.itemID = Guid.Empty;
         this.quantity = 0;
         this.projectID = Guid.Empty;
-        this.Project = new Project("");
     }
     public ProjectItem(Product? product, int quantity, Project project)
     {
@@ -31,7 +28,6 @@ public class ProjectItem
         else this.itemID = product.id;
         this.quantity = quantity;
         projectID = project.id;
-        this.Project = project;
     }
 
     public override string ToString()
@@ -46,7 +42,7 @@ public class Project
     [Required] public Guid id { get; private set; }
     [Required] public string name { get; set; } = string.Empty;
 
-    public List<ProjectItem> items { get; private set; } = new List<ProjectItem>();
+    [NotMapped] public List<ProjectItem> items { get; private set; } = new List<ProjectItem>();
 
     protected Project() { }
     public Project(string name)
@@ -55,23 +51,16 @@ public class Project
         this.items = new List<ProjectItem>();
         this.name = name;
     }
-    public Project(Project model)
+    public Project(Project model, List<ProjectItem>? items = null)
     {
         this.id = model.id;
         this.name = model.name;
-        this.items = new List<ProjectItem>(model.items);
+        if (items == null) this.items = new(model.items);
+        else this.items = new(items);
     }
-    public void AddItem(Product? product, int quantity) 
-        => this.items.Add(new ProjectItem(product, quantity, this));
-    
-    public void Removeitem(ProjectItem item)
-        => this.items.Remove(item);
-    
-    public void SetItems(List<ProjectItem> items)
-    {
-        this.items.Clear();
-        foreach (var item in items) this.items.Add(item);
-    }
+    public void AddItem(Product? product, int quantity) => this.items.Add(new ProjectItem(product, quantity, this));
+    public void Removeitem(ProjectItem item) => this.items.Remove(item);
+    public void SetItems(List<ProjectItem> items) => this.items = items;
 
     public override string ToString()
     {
