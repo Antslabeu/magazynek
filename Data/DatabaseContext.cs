@@ -12,6 +12,7 @@ namespace Magazynek.Data
         public required DbSet<Project> Projects { get; set; }
         public required DbSet<ProjectRealization> ProjectRealizations { get; set; }
         public required DbSet<ProjectItem> ProjectItems { get; set; }
+        public required DbSet<SystemSetting> SystemSettings { get; set; }
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -32,6 +33,10 @@ namespace Magazynek.Data
 
             modelBuilder.Entity<ProjectRealization>()
                 .HasIndex(p => p.id)
+                .IsUnique();
+
+            modelBuilder.Entity<SystemSetting>()
+                .HasIndex(s => s.name)
                 .IsUnique();
                 
             base.OnModelCreating(modelBuilder);

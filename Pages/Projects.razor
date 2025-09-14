@@ -5,6 +5,7 @@
 
 @inject IProductService ProductService
 @inject IProjectService ProjectService
+@inject IShippingEntryService ShippingEntryService
 
 
 <PageTitle>Projekty</PageTitle>
@@ -18,9 +19,15 @@
     </div>
     <table class="table table-dark table-striped table-hover align-middle">
         <thead class="table-dark border-bottom border-light">
+            <tr >
+                <th rowspan="2" class="align-middle">Nazwa</th>
+                <th rowspan="2" class="align-middle text-center" style="width:120px">Kompletność</th>
+                <th colspan="2" class="align-middle text-center">Wartość [PLN]</th>
+                <th rowspan="2" class="align-middle button-th">Akcje</th>
+            </tr>
             <tr>
-                <th>Nazwa</th>
-                <th class="button-th">Akcje</th>
+                <th style="width:80px" class="text-center">Brakująca</th>
+                <th style="width:80px" class="text-center">Całkowita</th>
             </tr>
         </thead>
         <tbody>
@@ -28,6 +35,9 @@
             {
                 <tr>
                     <td>@project.name</td>
+                    <td class="text-center">@project.GetBoughtItemsPercentReadiness(shippingEntries) %</td>
+                    <td class="text-center">@project.GetMissingValue(shippingEntries)</td>
+                    <td class="text-center">@project.GetTotalValue(shippingEntries).ToString(format: "0.00")</td>
                     <td>
                         <button class="btn btn-light" @onclick="() => Edit(project)">
                             <i class="bi bi-pencil"></i>
@@ -35,6 +45,31 @@
                         <button class="btn btn-danger" @onclick="() => Remove(project)">
                             <i class="bi bi-trash"></i>
                         </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="bom-view">
+                        <div class="container text-center">
+                            <h5>Elementy BOM</h5>
+                            <div class="row row-cols-4">
+                                @foreach(ProjectItem item in project.items)
+                                {
+                                    ShippingEntryViewModel? entry = shippingEntries.FirstOrDefault(se => se.product.id == item.itemID);
+                                    int availableQty = item.GetAvailableQuantity(shippingEntries);
+                                    ProjectItem.ErrorState errorState = ProjectItem.GetErrorState(entry, item.quantity);
+
+                                    <div class="col bom-item @(errorState switch
+                                    {
+                                        ProjectItem.ErrorState.NotInStockAtAll => "text-danger",
+                                        ProjectItem.ErrorState.NotEnoughBought => "text-warning",
+                                        _ => "text-success"
+                                    })">
+                                        <p>@item.product?.name</p>
+                                        <p>@availableQty / @item.quantity</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
                     </td>
                 </tr>
             }
@@ -93,9 +128,9 @@
     private string searchTerm = "";
     private Project? editingProject = null;
     private bool editingIsNew = false;
-    private List<Project> projects = new();
-
-    private List<Product> products = new();
+    private List<Project> projects = new List<Project>();
+    private List<Product> products = new List<Product>();
+    private List<ShippingEntryViewModel> shippingEntries = new List<ShippingEntryViewModel>();
 
     private IEnumerable<Project> filteredProjects => string.IsNullOrWhiteSpace(searchTerm)
         ? projects
@@ -104,6 +139,7 @@
     protected override async Task OnParametersSetAsync() {
         projects = await ProjectService.Get();
         products = (await ProductService.Get()).OrderBy(p => p.name).ToList();
+        shippingEntries = await ShippingEntryService.GetModels();
     }
     private void CloseEditModal() {
         editingProject = null;

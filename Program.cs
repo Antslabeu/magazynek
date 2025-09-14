@@ -1,4 +1,5 @@
 using Magazynek.Data;
+using Magazynek.Entities;
 using Magazynek.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,27 +9,27 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddDataProtection();
+
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     serverOptions.ListenAnyIP(5035);
 });
 
-
 string connectionString = builder.Configuration.GetConnectionString("MainDB")!;
-builder.Services.AddDbContext<DatabaseContext>(options =>
+builder.Services.AddDbContextFactory<DatabaseContext>(options =>
 {
     options.UseNpgsql(connectionString);
     options.LogTo(Console.WriteLine, LogLevel.Warning);
 });
 
-
+builder.Services.AddScoped<ISystemSettingsService,     SystemSettingsService>();
 builder.Services.AddScoped<ITmeService,                TmeService>();
 builder.Services.AddScoped<IProductService,            ProductService>();
 builder.Services.AddScoped<IShippingEntryService,      ShippingEntryService>();
 builder.Services.AddScoped<IProjectService,            ProjectService>();
 builder.Services.AddScoped<IProjectReservationService, ProjectReservationService>();
-
 
 var app = builder.Build();
 

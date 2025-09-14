@@ -1,0 +1,63 @@
+@page "/settings"
+
+@using Magazynek.Entities
+@using Magazynek.Services
+
+@inject ISystemSettingsService SystemSettingsService
+
+<PageTitle>Ustawienia</PageTitle>
+
+<div class="container mt-4">
+    <table class="table table-dark table-striped table-hover align-middle">
+        <thead class="table-dark border-bottom border-light">
+            <tr>
+                <th>Nazwa</th>
+                <th>Parametr</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for(int i = 0; i < settings.Count; i++)
+            {
+                int index = i;
+                <tr>
+                    <td>@settings[index].name</td>
+                    <td>
+                        @switch(settings[index].type)
+                        {
+                            case SystemSetting.SettingType.STRING:
+                                <InputText class="form-control bg-dark text-light" @bind-Value="settings[index].value" />
+                                break;
+                            case SystemSetting.SettingType.INT:
+                                <InputNumber class="form-control bg-dark text-light" @bind-Value="settings[index].i_value" />
+                                break;
+                            case SystemSetting.SettingType.FLOAT:
+                                <InputNumber class="form-control bg-dark text-light" @bind-Value="settings[index].f_value" />
+                                break;
+                            case SystemSetting.SettingType.BOOL:
+                                <InputCheckbox class="form-control bg-dark text-light" @bind-Value="settings[index].b_value" />
+                                break;
+                            default: break;
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table> 
+    <button type="submit" class="btn btn-success" @onclick="SaveSettings"><i class="bi bi-floppy-fill"></i> Zapisz</button>
+</div>
+
+
+@code {
+    private List<SystemSetting> settings = new List<SystemSetting>();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        settings = await SystemSettingsService.GetSettings();
+    }
+
+    private async Task SaveSettings()
+    {
+        foreach (SystemSetting setting in settings) await SystemSettingsService.SaveSetting(setting);
+    }
+}

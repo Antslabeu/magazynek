@@ -13,9 +13,27 @@ public class ProjectItem
     [Required] public int quantity { get; set; }
 
     [Column("projectid")] [Required] public Guid projectID { get; private set; }
+    
+    [NotMapped] public Product? product { get; set; } = null;
+
+    public enum ErrorState
+    {
+        OK = 0,
+        NotEnoughBought = 1,
+        NotInStockAtAll = 2
+    }
+    public static ErrorState GetErrorState(ShippingEntryViewModel? shippingModel, int neededQty)
+    {
+        if (shippingModel == null) return ErrorState.NotInStockAtAll;
+
+        if (shippingModel.stock == 0 && shippingModel.quantity < neededQty) return ErrorState.NotInStockAtAll;
+        if (shippingModel.quantity < neededQty) return ErrorState.NotEnoughBought;
+        return ErrorState.OK;
+    }
 
 
-    protected ProjectItem() {
+    protected ProjectItem()
+    {
         this.id = Guid.Empty;
         this.itemID = Guid.Empty;
         this.quantity = 0;
@@ -24,12 +42,23 @@ public class ProjectItem
     public ProjectItem(Product? product, int quantity, Project project)
     {
         this.id = Guid.NewGuid();
-        if(product == null) this.itemID = Guid.Empty;
+        if (product == null) this.itemID = Guid.Empty;
         else this.itemID = product.id;
         this.quantity = quantity;
         projectID = project.id;
+        this.product = product;
     }
-
+    public int GetAvailableQuantity(List<ShippingEntryViewModel> shippingEntryViewModels)
+    {
+        // get revelant shipping entries
+        int relevantEntriesCount = 0;
+        if (product != null)
+        {
+            ShippingEntryViewModel? model = shippingEntryViewModels.FirstOrDefault(e => e.product.id == product.id);
+            if (model != null) relevantEntriesCount = model.quantity;
+        }
+        return relevantEntriesCount;
+    }
     public override string ToString()
     {
         return $"ProjectItem: {itemID} (Quantity: {quantity}) in Project: {projectID}";
@@ -61,6 +90,43 @@ public class Project
     public void AddItem(Product? product, int quantity) => this.items.Add(new ProjectItem(product, quantity, this));
     public void Removeitem(ProjectItem item) => this.items.Remove(item);
     public void SetItems(List<ProjectItem> items) => this.items = items;
+
+    public int GetBoughtItemsPercentReadiness(List<ShippingEntryViewModel> shippingEntryViewModels)
+    {
+        int count = 0;
+        foreach (var item in items)
+        {
+            if(item.GetAvailableQuantity(shippingEntryViewModels) >= item.quantity) count += 1;
+        }
+
+        return count * 100 / items.Count;
+    }
+    public float GetTotalValue(List<ShippingEntryViewModel> shippingEntryViewModels)
+    {
+        float total = 0;
+        foreach (var item in items)
+        {
+            ShippingEntryViewModel? model = shippingEntryViewModels.FirstOrDefault(e => e.product.id == item.product?.id);
+            if (model != null) total += model.price * item.quantity;
+        }
+        return total;
+    }
+    public float GetMissingValue(List<ShippingEntryViewModel> shippingEntryViewModels)
+    {
+        float total = 0;
+        foreach (var item in items)
+        {
+            int availableQty = item.GetAvailableQuantity(shippingEntryViewModels);
+            if (availableQty >= item.quantity) continue;
+
+            int neededQtyToBuy = item.quantity - availableQty;
+            if(neededQtyToBuy < 1) neededQtyToBuy = 1;
+
+            ShippingEntryViewModel? model = shippingEntryViewModels.FirstOrDefault(e => e.product.id == item.product?.id);
+            if (model != null) total += model.price * neededQtyToBuy;
+        }
+        return total;
+    }
 
     public override string ToString()
     {

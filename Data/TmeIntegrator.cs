@@ -8,14 +8,15 @@ namespace Magazynek.Data
 {
     public static class TmeIntegrator
     {
-        public static async Task<ProductPricesResponse?> GetPricesAsync(string[] symbols)
+        public static async Task<ProductPricesResponse?> GetPricesAsync(string[] symbols, string token)
         {
             using var client = new HttpClient();
+
             var config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: true)
                 .Build();
 
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config["ApiSettings:Token"]);
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             var parameters = new List<KeyValuePair<string, string>>(
             [
                 new KeyValuePair<string, string>("Country", "PL"),
@@ -35,15 +36,11 @@ namespace Magazynek.Data
             var json = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<ProductPricesResponse>(json);
         }
-        public static async Task<ProductStockResponse?> GetStocksAsync(IEnumerable<string> symbols)
+        public static async Task<ProductStockResponse?> GetStocksAsync(IEnumerable<string> symbols, string token)
         {
             using var client = new HttpClient();
-            var config = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: true)
-                .Build();
 
-            client.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config["ApiSettings:Token"]);
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
             var parameters = new List<KeyValuePair<string, string>>
             {

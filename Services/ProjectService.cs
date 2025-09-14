@@ -24,6 +24,10 @@ namespace Magazynek.Services
             foreach (var proj in await database.Projects.ToListAsync())
             {
                 List<ProjectItem> items = await database.ProjectItems.Where(pi => pi.projectID == proj.id).ToListAsync();
+                foreach(ProjectItem item in items)
+                {
+                    item.product = await database.Products.FirstOrDefaultAsync(p => p.id == item.itemID);
+                }
                 projects.Add(new Project(proj, items));
             }
             return projects;

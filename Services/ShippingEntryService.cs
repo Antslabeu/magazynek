@@ -15,18 +15,24 @@ public interface IShippingEntryService
 
 public class ShippingEntryService : IShippingEntryService
 {
-    readonly DatabaseContext database;
+    private readonly IDbContextFactory<DatabaseContext> dbContextFactory;
     readonly ITmeService tmeService;
 
-    public ShippingEntryService(DatabaseContext database, ITmeService tmeService)
+    public ShippingEntryService(IDbContextFactory<DatabaseContext> dbContextFactory, ITmeService tmeService)
     {
-        this.database = database;
+        this.dbContextFactory = dbContextFactory;
         this.tmeService = tmeService;
     }
 
-    public Task<List<ShippingEntry>> Get() => database.ShippingEntries.ToListAsync();
+    public async Task<List<ShippingEntry>> Get()
+    {
+        await using var database = await dbContextFactory.CreateDbContextAsync();
+        return await database.ShippingEntries.ToListAsync();
+    }
     public async Task<List<ShippingEntryViewModel>> GetModels()
     {
+        await using var database = await dbContextFactory.CreateDbContextAsync();
+
         List<ShippingEntryViewModel> models = new();
         List<ShippingEntry> entries = await database.ShippingEntries.ToListAsync();
         List<Product> products = await database.Products.ToListAsync();
@@ -40,6 +46,8 @@ public class ShippingEntryService : IShippingEntryService
     }
     public async Task<ShippingEntryViewModel> UpdateInfoOrInsertNew(ShippingEntryViewModel model)
     {
+        await using var database = await dbContextFactory.CreateDbContextAsync();
+
         ShippingEntry? entryWithSameProduct = await database.ShippingEntries.FirstOrDefaultAsync(x => x.item == model.product.id);
 
         if (entryWithSameProduct != null)
@@ -76,10 +84,12 @@ public class ShippingEntryService : IShippingEntryService
             await database.ShippingEntries.AddAsync(dbEntry);
         }
         await database.SaveChangesAsync();
-        return new ShippingEntryViewModel(dbEntry, model.product); ;
+        return new ShippingEntryViewModel(dbEntry, model.product);
     }
     public async Task<ShippingEntryViewModel> RefreshValue(ShippingEntryViewModel entry)
     {
+        await using var database = await dbContextFactory.CreateDbContextAsync();
+        
         Price? price = await tmeService.GetPriceForAmountAsync(entry.product.tmeID, (uint)entry.quantity);
         StockProduct? stock = await tmeService.GetStockProductAsync(entry.product.tmeID);
         if (price == null || stock == null) return entry;

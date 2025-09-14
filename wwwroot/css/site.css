@@ -13,6 +13,11 @@ a, .btn-link {
     color: #0071c1;
 }
 
+.menu-spacer {
+    width: 100%;
+    height: 2em;
+}
+
 .btn-primary {
     color: #fff;
     background-color: #1b6ec2;
@@ -94,6 +99,9 @@ td:last-of-type {
     justify-content: center;
     gap: 1em;
 }
+td.bom-view {
+    display: table-cell;
+}
 td.loader-cell {
     display:table-cell;
 }
@@ -101,7 +109,15 @@ th.button-th {
     width: 7em;
     text-align: center;
 }
-
+div.col.bom-item {
+    margin-bottom: 1em;
+}
+div.col.bom-item>p {
+    margin-bottom: 0.2em;
+}
+thead tr:first-child th[colspan] {
+  border-bottom: none;
+}
 .text-danger {
     color: #ff4c4c;
 }
