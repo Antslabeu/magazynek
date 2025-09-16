@@ -42,15 +42,17 @@
                         @* <td>@product.farnellID</td> *@
                         <td>@product.tmeID</td>
                         <td>
-                            <button class="btn btn-success" @onclick="() => Copy(product)">
-                                <i class="bi bi-copy"></i>
-                            </button>
-                            <button class="btn btn-light" @onclick="() => Edit(product)">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-danger" @onclick="() => Remove(product)">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            <div class="btn-group-wrapper">
+                                <button class="btn btn-success" @onclick="() => Copy(product)">
+                                    <i class="bi bi-copy"></i>
+                                </button>
+                                <button class="btn btn-light" @onclick="() => Edit(product)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-danger" @onclick="() => Remove(product)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -71,8 +73,8 @@
                     <div class="modal-body">
                         <EditForm Model="editingProduct" OnValidSubmit="SaveProduct">
                             <div class="mb-3">
-                                <label class="form-label">Typ</label>
-                                <InputSelect class="form-control" @bind-Value="editingProduct.type" TValue="Product.Type">
+                                <label for="type" class="form-label">Typ</label>
+                                <InputSelect id="type" class="form-control" @bind-Value="editingProduct.type" TValue="Product.Type">
                                     @foreach (var type in Enum.GetValues<Product.Type>())
                                     {
                                         <option value="@type">@type.GetLabel()</option>
@@ -80,18 +82,18 @@
                                 </InputSelect>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Nazwa</label>
-                                <InputText class="form-control" @bind-Value="editingProduct.name" />
+                                <label for="el-name" class="form-label">Nazwa</label>
+                                <InputText id="el-name" class="form-control" @bind-Value="editingProduct.name" />
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Opis</label>
-                                <InputText class="form-control" @bind-Value="editingProduct.description" />
+                                <label for="desc" class="form-label">Opis</label>
+                                <InputText id="desc" class="form-control" @bind-Value="editingProduct.description" />
                             </div>
                             @if(editingProduct.type == Product.Type.RawMaterial)
                             {
                                 <div class="mb-3">
-                                    <label class="form-label">Jednostka</label>
-                                    <InputSelect class="form-control" @bind-Value="editingProduct.unit" TValue="Product.Unit">
+                                    <label for="unit" class="form-label">Jednostka</label>
+                                    <InputSelect id="unit" class="form-control" @bind-Value="editingProduct.unit" TValue="Product.Unit">
                                         @foreach (Product.Unit unit in Enum.GetValues<Product.Unit>())
                                         {
                                             <option value="@unit">@unit.GetLabel()</option>
@@ -100,20 +102,20 @@
                                 </div>
                             }
                             <div class="mb-3">
-                                <label class="form-label">Aktywny</label>
-                                <InputCheckbox @bind-Value="editingProduct.active" class="form-controldot"/>
+                                <label for="active" class="form-label">Aktywny</label>
+                                <InputCheckbox id="active" @bind-Value="editingProduct.active" class="form-controldot"/>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Obudowa</label>
-                                <InputText class="form-control" @bind-Value="editingProduct.package" />
+                                <label for="enclosure" class="form-label">Obudowa</label>
+                                <InputText id="enclosure" class="form-control" @bind-Value="editingProduct.package" />
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Farnell ID</label>
-                                <InputText class="form-control" @bind-Value="editingProduct.farnellID" />
+                                <label for="farnell" class="form-label">Farnell ID</label>
+                                <InputText id="farnell" class="form-control" @bind-Value="editingProduct.farnellID" />
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">TME ID</label>
-                                <InputText class="form-control" @bind-Value="editingProduct.tmeID" />
+                                <label for="tme" class="form-label">TME ID</label>
+                                <InputText id="tme" class="form-control" @bind-Value="editingProduct.tmeID" />
                             </div>
                             <button type="submit" class="btn btn-success"><i class="bi bi-floppy-fill"></i> Zapisz</button>
                         </EditForm>

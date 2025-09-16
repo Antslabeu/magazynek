@@ -26,7 +26,6 @@
                 <th>Opis</th>
                 <th>Obudowa</th>
                 <th>Ilość</th>
-                @* <th>Wartość</th> *@
                 <th>TME ID</th>
                 <th>Dostępność</th>
             </tr>
@@ -41,7 +40,6 @@
                     <td>@shippingEntry.product.description</td>
                     <td>@shippingEntry.product.package</td>
                     <td class="@(qtyZero? "text-danger":"")">@shippingEntry.quantity</td>
-                    @* <td>@shippingEntry.stockValue.ToString("0.00")</td> *@
                     <td>@shippingEntry.product.tmeID</td>
                     <td class="@(stockZero? "text-danger":"")">@shippingEntry.stock</td>
                 </tr>
@@ -60,20 +58,32 @@
                     </div>
                     <div class="modal-body">
                         <EditForm Model="editingEntry" OnValidSubmit="SaveEntry">
-                            <label class="form-label">Wybierz produkt</label>
-                            <InputText class="form-control mb-2" placeholder="Szukaj..." 
-                                @bind-Value="productSearch" 
-                                @oninput="e => { productSearch = e.Value?.ToString() ?? string.Empty; FilterProducts(); }" 
-                            />
-                            <select class="form-select" @onchange="OnProductSelected">
-                                @foreach (var product in filteredProducts)
-                                {
-                                    <option value="@product.id">@product.name</option>
-                                }
-                            </select>
                             <div class="mb-3">
-                                <label class="form-label">Ilość</label>
-                                <InputNumber class="form-control" @bind-Value="editingEntry.quantity" min="0" step="1" />
+                                <label for="search-product" class="form-label">Wybierz produkt</label>
+                                <InputText id="search-product" class="form-control mb-2" placeholder="Szukaj..." 
+                                    @bind-Value="productSearch" 
+                                    @oninput="e => { productSearch = e.Value?.ToString() ?? string.Empty; FilterProducts(); }" 
+                                />
+                                <select id="sel-product" class="form-select" @onchange="OnProductSelected">
+                                    @foreach (Product product in filteredProducts)
+                                    {
+                                        <option value="@product.id">@product.name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="qty" class="form-label">Ilość</label>
+                                <div class="input-group">
+                                    @if(editingEntry.product.type == Product.Type.RawMaterial)
+                                    {
+                                        <InputNumber id="qty" class="form-control" @bind-Value="editingEntry.quantity" min="0" step="0.01" area-describedby="addon-unit"/>
+                                        <span class="input-group-text" id="addon-unit">@editingEntry.product.unit.GetAbbreviation()</span>
+                                    }
+                                    else
+                                    {
+                                        <InputNumber id="qty" class="form-control" @bind-Value="editingEntry.quantity" min="0" step="1"/>
+                                    }
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-success">Save</button>
                         </EditForm>
@@ -95,11 +105,6 @@
                         <div class="progress" role="progressbar" aria-label="Success striped example" aria-valuenow="@currentRefreshingIndex" aria-valuemin="0" aria-valuemax="@shippingEntries.Count">
                             <div class="progress-bar progress-bar-striped bg-success progress-bar-animated" style="width: @currentRefreshingIndex%"></div>
                         </div>
-                        @* <div class="loading-overlay">
-                            <div class="spinner-border text-light" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div> *@
                     </div>
                 </div>
             </div>
@@ -112,11 +117,11 @@
     private string productSearch = string.Empty;
     private string searchTerm = string.Empty;
 
-    private List<ShippingEntryViewModel> shippingEntries = new();
+    private List<ShippingEntryViewModel> shippingEntries = new List<ShippingEntryViewModel>();
     private ShippingEntryViewModel? editingEntry = null;
 
-    private List<Product> allProducts = new();
-    private List<Product> filteredProducts = new();
+    private List<Product> allProducts = new List<Product>();
+    private List<Product> filteredProducts = new List<Product>();
 
     private bool isLoading = false;
     private int currentRefreshingIndex = 1;
@@ -210,16 +215,24 @@
     {
         if(editingEntry == null) return;
 
-        var selectedId = Guid.Parse(e.Value?.ToString() ?? Guid.Empty.ToString());
-        var selectedProduct = allProducts.FirstOrDefault(p => p.id == selectedId);
+        Guid selectedId = Guid.Parse(e.Value?.ToString() ?? Guid.Empty.ToString());
+        Product? selectedProduct = allProducts.FirstOrDefault(p => p.id == selectedId);
 
         if (selectedProduct != null) editingEntry.product = selectedProduct;
+        StateHasChanged();
     }
     private void FilterProducts()
     {
+
+        Product? prevSelected = filteredProducts.Count > 0? filteredProducts[0] : null;
         filteredProducts = allProducts
             .Where(p => string.IsNullOrWhiteSpace(productSearch) || p.name.Contains(productSearch, StringComparison.OrdinalIgnoreCase))
             .OrderBy(p=>p.name)
             .ToList();
+
+        if(filteredProducts.Count > 0 && prevSelected != filteredProducts[0])
+        {
+            OnProductSelected(new ChangeEventArgs { Value = filteredProducts[0].id.ToString() });
+        }
     }
 }

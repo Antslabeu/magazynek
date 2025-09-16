@@ -94,7 +94,7 @@ td:empty::before {
     color: #666;
     font-style: italic;
 }
-td:last-of-type {
+.btn-group-wrapper {
     display: flex;
     justify-content: center;
     gap: 1em;
