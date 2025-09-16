@@ -35,8 +35,10 @@
             {
                 bool qtyZero = shippingEntry.quantity == 0;
                 bool stockZero = shippingEntry.stock == 0;
+                string extraUnit = "";
+                if(shippingEntry.product.type == Product.Type.RawMaterial) extraUnit = $"({shippingEntry.product.unit.GetAbbreviation()}) ";
                 <tr>
-                    <td class="@(stockZero || qtyZero? "text-danger":"")">@shippingEntry.product.name</td>
+                    <td class="@(stockZero || qtyZero? "text-danger":"")">@shippingEntry.product.name @extraUnit</td>
                     <td>@shippingEntry.product.description</td>
                     <td>@shippingEntry.product.package</td>
                     <td class="@(qtyZero? "text-danger":"")">@shippingEntry.quantity</td>
