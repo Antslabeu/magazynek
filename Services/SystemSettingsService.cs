@@ -11,6 +11,8 @@ namespace Magazynek.Services
         Task<List<SystemSetting>> GetSettings();
         Task<T> GetSetting<T>(string name);
         Task SaveSetting(SystemSetting systemSetting);
+
+        Task CreateStandardSettingsIfNotExist(List<SettingDefinition> neededSettings);
     }
 
 
@@ -21,7 +23,7 @@ namespace Magazynek.Services
 
         private readonly IDbContextFactory<DatabaseContext> dbContextFactory;
 
-        public SystemSettingsService(IDataProtectionProvider provider, IDbContextFactory<DatabaseContext> dbContextFactory)
+        public SystemSettingsService(IDataProtectionProvider provider, IDbContextFactory<DatabaseContext> dbContextFactory, IConfiguration configuration)
         {
             this.dbContextFactory = dbContextFactory;
             protector = provider.CreateProtector("AppSettingKeys");
@@ -52,9 +54,9 @@ namespace Magazynek.Services
                 return (typeof(T), setting.type) switch
                 {
                     (Type t, SystemSetting.SettingType.STRING) when t == typeof(string) => (T)(object)setting.value!,
-                    (Type t, SystemSetting.SettingType.INT)    when t == typeof(int)    => (T)(object)setting.i_value,
-                    (Type t, SystemSetting.SettingType.BOOL)   when t == typeof(bool)   => (T)(object)setting.b_value,
-                    (Type t, SystemSetting.SettingType.FLOAT)  when t == typeof(float)  => (T)(object)setting.f_value,
+                    (Type t, SystemSetting.SettingType.INT) when t == typeof(int) => (T)(object)setting.i_value,
+                    (Type t, SystemSetting.SettingType.BOOL) when t == typeof(bool) => (T)(object)setting.b_value,
+                    (Type t, SystemSetting.SettingType.FLOAT) when t == typeof(float) => (T)(object)setting.f_value,
                     _ => default!
                 };
             }
@@ -73,6 +75,20 @@ namespace Magazynek.Services
             }
             else await database.SystemSettings.AddAsync(systemSetting);
 
+            await database.SaveChangesAsync();
+        }
+
+        public async Task CreateStandardSettingsIfNotExist(List<SettingDefinition> neededSettings)
+        {
+            await using var database = await dbContextFactory.CreateDbContextAsync();
+            foreach (SettingDefinition setting in neededSettings)
+            {
+                if (!database.SystemSettings.Any(s => s.name == setting.Name))
+                {
+                    SystemSetting newSetting = new SystemSetting(setting.Name, setting.Type, protector.Protect(""));
+                    await database.SystemSettings.AddAsync(newSetting);
+                }
+            }
             await database.SaveChangesAsync();
         }
     }

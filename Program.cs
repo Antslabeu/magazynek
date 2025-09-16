@@ -21,7 +21,7 @@ string connectionString = builder.Configuration.GetConnectionString("MainDB")!;
 builder.Services.AddDbContextFactory<DatabaseContext>(options =>
 {
     options.UseNpgsql(connectionString);
-    options.LogTo(Console.WriteLine, LogLevel.Warning);
+    options.LogTo(Console.WriteLine, LogLevel.Error);
 });
 
 builder.Services.AddScoped<ISystemSettingsService,     SystemSettingsService>();
@@ -50,4 +50,7 @@ app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
+Console.WriteLine("Running startup things...");
+await StartupHelper.InitApplicationAsync(app.Services);
+Console.WriteLine("Done!");
 app.Run();

@@ -4,6 +4,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Magazynek.Entities
 {
+    public sealed class SettingDefinition
+    {
+        public string Name { get; set; } = string.Empty;
+        public SystemSetting.SettingType Type { get; set; } = SystemSetting.SettingType.STRING;
+    }
+
     [Table("systemsettings")]
     public class SystemSetting
     {
