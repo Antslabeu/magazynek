@@ -2,6 +2,7 @@
 
 @using Magazynek.Entities
 @using Magazynek.Services
+@using Magazynek.Data
 
 @inject IProductService ProductService
 
@@ -19,6 +20,7 @@
         <table class="table table-dark table-striped table-hover align-middle">
             <thead class="table-dark border-bottom border-light">
                 <tr>
+                    <th>Typ</th>
                     <th>Nazwa</th>
                     <th>Aktywny</th>
                     <th>Opis</th>
@@ -29,11 +31,12 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var product in filteredProducts)
+                @foreach (Product product in filteredProducts)
                 {
                     <tr>
+                        <td>@product.type.GetLabel() @(product.type == Product.Type.RawMaterial? product.unit.GetAbbreviation() : "") </td>
                         <td>@product.name</td>
-                        <td><BoolPresentation Value="product.active" /></td>
+                        <td class="text-center"><BoolPresentation Value="product.active" /></td>
                         <td>@product.description</td>
                         <td>@product.package</td>
                         @* <td>@product.farnellID</td> *@
@@ -66,7 +69,16 @@
                         <button type="button" class="btn-close btn-close-white" @onclick="CloseEditModal"></button>
                     </div>
                     <div class="modal-body">
-                        <EditForm Model="editingProduct" OnValidSubmit="SaveProduct" >
+                        <EditForm Model="editingProduct" OnValidSubmit="SaveProduct">
+                            <div class="mb-3">
+                                <label class="form-label">Typ</label>
+                                <InputSelect class="form-control" @bind-Value="editingProduct.type" TValue="Product.Type">
+                                    @foreach (var type in Enum.GetValues<Product.Type>())
+                                    {
+                                        <option value="@type">@type.GetLabel()</option>
+                                    }
+                                </InputSelect>
+                            </div>
                             <div class="mb-3">
                                 <label class="form-label">Nazwa</label>
                                 <InputText class="form-control" @bind-Value="editingProduct.name" />
@@ -75,6 +87,18 @@
                                 <label class="form-label">Opis</label>
                                 <InputText class="form-control" @bind-Value="editingProduct.description" />
                             </div>
+                            @if(editingProduct.type == Product.Type.RawMaterial)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Jednostka</label>
+                                    <InputSelect class="form-control" @bind-Value="editingProduct.unit" TValue="Product.Unit">
+                                        @foreach (Product.Unit unit in Enum.GetValues<Product.Unit>())
+                                        {
+                                            <option value="@unit">@unit.GetLabel()</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            }
                             <div class="mb-3">
                                 <label class="form-label">Aktywny</label>
                                 <InputCheckbox @bind-Value="editingProduct.active" class="form-controldot"/>
@@ -115,7 +139,10 @@
                     p.tmeID.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnParametersSetAsync() {
-        products = (await ProductService.Get()).OrderBy(p=>p.name).ToList();
+        products = (await ProductService.Get())
+            .OrderBy(p => p.type)
+            .ThenBy(p => p.name)
+            .ToList();
     }
     private void Edit(Product p) {
         editingProductIsNew = false;
@@ -135,13 +162,24 @@
             farnellID: p.farnellID, 
             tmeID: p.tmeID,
             description: p.description,
-            active: p.active
+            active: p.active,
+            type: p.type,
+            unit: p.unit
         ));
     }
     
     private void AddNew() {
         editingProductIsNew = true;
-        editingProduct = new ProductViewModel(new Product("NOWY","","","","",false));
+        editingProduct = new ProductViewModel(product: new Product(
+            name: "NOWY",
+            package: "",
+            farnellID: "",
+            tmeID: "",
+            description: "",
+            active: false,
+            type: Product.Type.Item,
+            unit: Product.Unit.Meter
+        ));
     }
     private void CloseEditModal() {
         editingProduct = null;
