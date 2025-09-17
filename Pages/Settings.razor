@@ -34,7 +34,16 @@
                                 <InputNumber class="form-control bg-dark text-light" @bind-Value="settings[index].f_value" />
                                 break;
                             case SystemSetting.SettingType.BOOL:
-                                <InputCheckbox class="form-control bg-dark text-light" @bind-Value="settings[index].b_value" />
+                                @code{ 
+                                    Guid guid = Guid.NewGuid(); 
+                                }
+                                <InputCheckbox @bind-Value="settings[index].b_value"
+                                    class="btn-check"
+                                    id="@guid" />
+
+                                <label class="btn btn-outline-primary" for="@guid">
+                                    @(settings[index].b_value ? "TAK" : "NIE")
+                                </label>
                                 break;
                             default: break;
                         }

@@ -5,6 +5,7 @@
 
 @inject IShippingEntryService ShippingEntryService
 @inject IProductService       ProductService
+@inject ISystemSettingsService SystemSettingsService
 
 
 <PageTitle>Ilości</PageTitle>
@@ -15,9 +16,12 @@
         <button class="btn btn-success" @onclick="AddNew">
             <i class="bi bi-plus-circle"></i>
         </button>
-        <button class="btn btn-light" @onclick="RefreshValues">
-            <i class="bi bi-arrow-clockwise"></i>
-        </button>
+        @if(tmeEnabled)
+        {
+            <button class="btn btn-light" @onclick="RefreshValues">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+        }
     </div>
     <table class="table table-dark table-striped table-hover align-middle">
         <thead class="table-dark border-bottom border-light">
@@ -119,6 +123,7 @@
     private string productSearch = string.Empty;
     private string searchTerm = string.Empty;
 
+    private bool tmeEnabled;
     private List<ShippingEntryViewModel> shippingEntries = new List<ShippingEntryViewModel>();
     private ShippingEntryViewModel? editingEntry = null;
 
@@ -139,7 +144,7 @@
     {
         allProducts = await ProductService.Get();
         shippingEntries = (await ShippingEntryService.GetModels()).OrderBy(se => se.product.name).ToList();
-
+        tmeEnabled = await SystemSettingsService.GetSetting<bool>(name: "Włącz TME API");
 
         // if there is product defined but no shipping entry, create empty shipping entry
         foreach(Product p in allProducts)
