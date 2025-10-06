@@ -1,0 +1,101 @@
+@page "/do-project"
+
+@using Magazynek.Entities
+@using Magazynek.Services
+
+@inject IProductService ProductService
+@inject IProjectService ProjectService
+@inject IProjectReservationService ProjectReservationService
+
+
+
+<PageTitle>Realizuj</PageTitle>
+
+<div class="container mt-4">
+    <button class="btn btn-success" @onclick="AddNew">
+        <i class="bi bi-plus-circle"></i>
+    </button>
+
+    @if(editingObject != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content text-light bg-dark">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            @(editingIsNew ? "Dodaj projekt" : "Modyfikuj projekt")
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CloseEditModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <EditForm Model="editingObject" OnValidSubmit="Save" >
+                            <div class="mb-3">
+                                <label class="form-label">Nazwa</label>
+                                <InputText class="form-control" @bind-Value="editingObject.name" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Projekt</label>
+                                <InputSelect class="form-select" @bind-Value="editingObject.projectID">
+                                    <option value="@Guid.Empty" selected>Wybierz</option>
+                                    @foreach (Project project in projects)
+                                    {
+                                        <option value="@project.id">@project.name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ilość</label>
+                                <InputNumber class="form-control" min="1" @bind-Value="editingObject.quantity" />
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <table class="table table-dark table-striped table-hover align-middle">
+        <thead class="table-dark border-bottom border-light">
+            <tr>
+                <th>Nazwa</th>
+                <th class="button-th">Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(ProjectRealizationViewModel model in realizations)
+            {
+                <tr>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+
+@code {
+    List<ProjectRealizationViewModel> realizations = new();
+    List<Project> projects = new();
+
+    private ProjectRealizationViewModel? editingObject = null;
+    private bool editingIsNew = false;
+
+
+    protected override async Task OnParametersSetAsync() {
+        realizations = await ProjectReservationService.Get();
+        projects = await ProjectService.Get();
+    }
+    private void AddNew() {
+        editingIsNew = true;
+        editingObject = new ProjectRealizationViewModel("");
+    }
+    private void CloseEditModal() {
+        editingObject = null;
+    }
+    private async void Save(EditContext context)
+    {
+        if(editingObject == null) return;
+        await Task.Delay(0); // This line is just to avoid warning about async method without await
+        
+    }
+}

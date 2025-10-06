@@ -1,0 +1,23 @@
+<style>
+    .bi-ban {
+        color: #ff8080;
+    }
+    .bi-check-circle {
+        color: #80ff80;
+    }
+</style>
+
+
+@if(Value)
+{
+    <i class="bi bi-check-circle"></i>
+}
+else 
+{
+    <i class="bi bi-ban"></i>
+}
+
+
+@code {
+    [Parameter] public bool Value { get; set; }
+}

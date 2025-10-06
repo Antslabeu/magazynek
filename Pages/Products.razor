@@ -1,0 +1,167 @@
+@page "/products"
+
+@using Magazynek.Entities
+@using Magazynek.Services
+
+@inject IProductService ProductService
+
+
+
+<PageTitle>Produkty</PageTitle>
+
+<div class="container mt-4">
+    <div class="mb-3 searcher gap-4">
+        <input class="form-control bg-dark text-light" type="text" placeholder="Szukaj..." @bind="searchTerm" />
+        <button class="btn btn-success" @onclick="AddNew">
+            <i class="bi bi-plus-circle"></i>
+        </button>
+    </div>
+        <table class="table table-dark table-striped table-hover align-middle">
+            <thead class="table-dark border-bottom border-light">
+                <tr>
+                    <th>Nazwa</th>
+                    <th>Aktywny</th>
+                    <th>Opis</th>
+                    <th>Obudowa</th>
+                    @* <th>Farnell ID</th> *@
+                    <th>TME ID</th>
+                    <th class="button-th">Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in filteredProducts)
+                {
+                    <tr>
+                        <td>@product.name</td>
+                        <td><BoolPresentation Value="product.active" /></td>
+                        <td>@product.description</td>
+                        <td>@product.package</td>
+                        @* <td>@product.farnellID</td> *@
+                        <td>@product.tmeID</td>
+                        <td>
+                            <button class="btn btn-success" @onclick="() => Copy(product)">
+                                <i class="bi bi-copy"></i>
+                            </button>
+                            <button class="btn btn-light" @onclick="() => Edit(product)">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-danger" @onclick="() => Remove(product)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    @if (editingProduct != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content text-light bg-dark">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            @(editingProductIsNew ? "Dodaj produkt" : "Modyfikuj produkt")
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CloseEditModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <EditForm Model="editingProduct" OnValidSubmit="SaveProduct" >
+                            <div class="mb-3">
+                                <label class="form-label">Nazwa</label>
+                                <InputText class="form-control" @bind-Value="editingProduct.name" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Opis</label>
+                                <InputText class="form-control" @bind-Value="editingProduct.description" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Aktywny</label>
+                                <InputCheckbox @bind-Value="editingProduct.active" class="form-controldot"/>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Obudowa</label>
+                                <InputText class="form-control" @bind-Value="editingProduct.package" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Farnell ID</label>
+                                <InputText class="form-control" @bind-Value="editingProduct.farnellID" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">TME ID</label>
+                                <InputText class="form-control" @bind-Value="editingProduct.tmeID" />
+                            </div>
+                            <button type="submit" class="btn btn-success"><i class="bi bi-floppy-fill"></i> Zapisz</button>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+
+@code {
+    private string searchTerm = "";
+    private ProductViewModel? editingProduct = null;
+    private bool editingProductIsNew = false;
+    private List<Product> products = new();
+    
+    private IEnumerable<Product> filteredProducts => products
+        .Where(p => string.IsNullOrWhiteSpace(searchTerm) ||
+                    p.name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.package.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.farnellID.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.tmeID.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnParametersSetAsync() {
+        products = (await ProductService.Get()).OrderBy(p=>p.name).ToList();
+    }
+    private void Edit(Product p) {
+        editingProductIsNew = false;
+        editingProduct = new ProductViewModel(p);
+    }
+    private async void Remove(Product p) {
+        await ProductService.Remove(p);
+        products.Remove(p);
+        StateHasChanged();
+    }
+    private void Copy(Product p)
+    {
+        editingProductIsNew = true;
+        editingProduct = new ProductViewModel(new Product(
+            name: p.name + " - KOPIA", 
+            package: p.package, 
+            farnellID: p.farnellID, 
+            tmeID: p.tmeID,
+            description: p.description,
+            active: p.active
+        ));
+    }
+    
+    private void AddNew() {
+        editingProductIsNew = true;
+        editingProduct = new ProductViewModel(new Product("NOWY","","","","",false));
+    }
+    private void CloseEditModal() {
+        editingProduct = null;
+    }
+    private async void SaveProduct(EditContext context)
+    {
+        if(editingProduct == null) return;
+
+        Product newProduct = await ProductService.UpdateInfoOrInsertNew(editingProduct);
+        Product? existingProduct = products.FirstOrDefault(x => x.id == newProduct.id);
+        if(existingProduct == null) products.Add(newProduct);
+        else {
+            existingProduct.SetName(newProduct.name);
+            existingProduct.SetPackage(newProduct.package);
+            existingProduct.SetFarnellID(newProduct.farnellID);
+            existingProduct.SetTmeID(newProduct.tmeID);
+        }
+        editingProduct = null;
+
+        products = products.OrderBy(p=>p.name).ToList();
+        StateHasChanged();
+    }
+}
