@@ -28,7 +28,6 @@ Desktop.ini
 
 # Environment / secrets
 .env
-.env.*
 *.secret
 secrets.json
 appsettings.Development.json
