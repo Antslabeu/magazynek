@@ -1,0 +1,60 @@
+# Build
+bin/
+obj/
+out/
+publish/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.log
+
+# VS Code
+.vscode/
+.history/
+*.code-workspace
+
+# User-specific
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Mac / system files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Environment / secrets
+.env
+.env.*
+*.secret
+secrets.json
+appsettings.Development.json
+appsettings.Local.json
+
+# Package managers
+node_modules/
+packages/
+
+# Backup / temp
+*.tmp
+*.bak
+*.swp
+*.orig
+*.old
+*.log
+~$*
+
+# JetBrains (Rider)
+.idea/
+*.iml
+
+# Python virtual env (if used for scripts)
+venv/
+__pycache__/
+
+# Docker / containers
+docker-compose.override.yml
+*.tar

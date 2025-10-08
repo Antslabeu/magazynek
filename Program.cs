@@ -1,5 +1,6 @@
+
+
 using Magazynek.Data;
-using Magazynek.Entities;
 using Magazynek.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +18,8 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     serverOptions.ListenAnyIP(5035);
 });
 
-string connectionString = builder.Configuration.GetConnectionString("MainDB")!;
+string connectionString = EnvironmentConfig.GetPostgresConnectionString();
+
 builder.Services.AddDbContextFactory<DatabaseContext>(options =>
 {
     options.UseNpgsql(connectionString);
