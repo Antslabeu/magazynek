@@ -8,8 +8,8 @@ namespace Magazynek.Services
     {
         Task<List<Project>> Get();
         Task<Project?> GetByID(Guid ID);
-        Task<Project> UpdateInfoOrInsertNew(Project product);
-        Task<bool> Remove(Project product);
+        Task<Project> UpdateInfoOrInsertNew(Project product, bool saveChangesAsync = true);
+        Task<bool> Remove(Project product, bool saveChangesAsync = true);
     }
 
     public class ProjectService : IProjectService
@@ -24,7 +24,7 @@ namespace Magazynek.Services
             foreach (var proj in await database.Projects.ToListAsync())
             {
                 List<ProjectItem> items = await database.ProjectItems.Where(pi => pi.projectID == proj.id).ToListAsync();
-                foreach(ProjectItem item in items)
+                foreach (ProjectItem item in items)
                 {
                     item.product = await database.Products.FirstOrDefaultAsync(p => p.id == item.itemID);
                 }
@@ -42,7 +42,7 @@ namespace Magazynek.Services
             p = new Project(p, items);
             return p;
         }
-        public async Task<Project> UpdateInfoOrInsertNew(Project project)
+        public async Task<Project> UpdateInfoOrInsertNew(Project project, bool saveChangesAsync = true)
         {
             Console.WriteLine($"Updating or inserting project: {project}");
             Console.WriteLine($"With items:{Environment.NewLine}{string.Join(Environment.NewLine, project.items)}");
@@ -83,16 +83,16 @@ namespace Magazynek.Services
                 dbProject = new Project(project);
                 await database.Projects.AddAsync(dbProject);
                 foreach (var item in project.items) await database.ProjectItems.AddAsync(item);
-            } 
+            }
 
-            await database.SaveChangesAsync();
+            if (saveChangesAsync) await database.SaveChangesAsync();
             return dbProject;
         }
 
-        public async Task<bool> Remove(Project project)
+        public async Task<bool> Remove(Project project, bool saveChangesAsync = true)
         {
             database.Projects.Remove(project);
-            await database.SaveChangesAsync();
+            if (saveChangesAsync) await database.SaveChangesAsync();
             return true;
         }
     }

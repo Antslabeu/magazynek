@@ -8,8 +8,8 @@ namespace Magazynek.Services
     {
         Task<List<Product>> Get();
         Task<Product?> GetByID(Guid ID);
-        Task<Product> UpdateInfoOrInsertNew(ProductViewModel product);
-        Task<bool> Remove(Product product);
+        Task<Product> UpdateInfoOrInsertNew(ProductViewModel product, bool saveChangesAsync = true);
+        Task<bool> Remove(Product product, bool saveChangesAsync = true);
     }
 
     public class ProductService : IProductService
@@ -19,7 +19,7 @@ namespace Magazynek.Services
         public ProductService(DatabaseContext database) => this.database = database;
         public Task<List<Product>> Get() => database.Products.ToListAsync();
         public Task<Product?> GetByID(Guid id) => database.Products.FirstOrDefaultAsync(x => x.id == id);
-        public async Task<Product> UpdateInfoOrInsertNew(ProductViewModel product)
+        public async Task<Product> UpdateInfoOrInsertNew(ProductViewModel product, bool saveChangesAsync = true)
         {
             Product? dbProduct = await database.Products.FirstOrDefaultAsync(x => x.id == product.id);
             if (dbProduct != null)
@@ -44,14 +44,14 @@ namespace Magazynek.Services
                 await database.Products.AddAsync(dbProduct);
             }
 
-            await database.SaveChangesAsync();
+            if (saveChangesAsync) await database.SaveChangesAsync();
             return dbProduct;
         }
 
-        public async Task<bool> Remove(Product product)
+        public async Task<bool> Remove(Product product, bool saveChangesAsync = true)
         {
             database.Products.Remove(product);
-            await database.SaveChangesAsync();
+            if(saveChangesAsync) await database.SaveChangesAsync();
             return true;
         }
     }

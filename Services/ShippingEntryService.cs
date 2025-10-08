@@ -9,8 +9,8 @@ public interface IShippingEntryService
 {
     Task<List<ShippingEntry>> Get();
     Task<List<ShippingEntryViewModel>> GetModels();
-    Task<ShippingEntryViewModel> UpdateInfoOrInsertNew(ShippingEntryViewModel product);
-    Task<ShippingEntryViewModel> RefreshValue(ShippingEntryViewModel entry);
+    Task<ShippingEntryViewModel> UpdateInfoOrInsertNew(ShippingEntryViewModel product, bool saveChangesAsync = true);
+    Task<ShippingEntryViewModel> RefreshValue(ShippingEntryViewModel entry, bool saveChangesAsync = true);
 }
 
 public class ShippingEntryService : IShippingEntryService
@@ -44,7 +44,7 @@ public class ShippingEntryService : IShippingEntryService
         }
         return models;
     }
-    public async Task<ShippingEntryViewModel> UpdateInfoOrInsertNew(ShippingEntryViewModel model)
+    public async Task<ShippingEntryViewModel> UpdateInfoOrInsertNew(ShippingEntryViewModel model, bool saveChangesAsync = true)
     {
         await using var database = await dbContextFactory.CreateDbContextAsync();
 
@@ -53,7 +53,7 @@ public class ShippingEntryService : IShippingEntryService
         if (entryWithSameProduct != null)
         {
             entryWithSameProduct.SetQuantity(entryWithSameProduct.quantity + (uint)model.quantity);
-            await database.SaveChangesAsync();
+            if(saveChangesAsync) await database.SaveChangesAsync();
             return new ShippingEntryViewModel(entryWithSameProduct, model.product);
         }
 
@@ -86,7 +86,7 @@ public class ShippingEntryService : IShippingEntryService
         await database.SaveChangesAsync();
         return new ShippingEntryViewModel(dbEntry, model.product);
     }
-    public async Task<ShippingEntryViewModel> RefreshValue(ShippingEntryViewModel entry)
+    public async Task<ShippingEntryViewModel> RefreshValue(ShippingEntryViewModel entry, bool saveChangesAsync = true)
     {
         await using var database = await dbContextFactory.CreateDbContextAsync();
         
@@ -99,7 +99,7 @@ public class ShippingEntryService : IShippingEntryService
         dbEntry.SetLastCheck(DateTime.UtcNow);
         dbEntry.SetPrice((float)price.PriceValue);
         dbEntry.SetStock((uint)stock.Amount);
-        await database.SaveChangesAsync();
+        if(saveChangesAsync) await database.SaveChangesAsync();
 
         return new ShippingEntryViewModel(dbEntry, entry.product);
     }

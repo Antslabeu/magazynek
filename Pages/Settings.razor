@@ -20,21 +20,21 @@
             {
                 int index = i;
                 <tr>
-                    <td>@settings[index].name</td>
+                    <td>@settings[index].Name</td>
                     <td>
-                        @switch(settings[index].type)
+                        @switch(settings[index].Type)
                         {
                             case SystemSetting.SettingType.STRING:
-                                <InputText class="form-control bg-dark text-light" @bind-Value="settings[index].value" />
+                                <InputText class="form-control bg-dark text-light" @bind-Value="settings[index].Value" />
                                 break;
                             case SystemSetting.SettingType.INT:
-                                <InputNumber class="form-control bg-dark text-light" @bind-Value="settings[index].i_value" />
+                                <InputNumber class="form-control bg-dark text-light" @bind-Value="settings[index].I_Value" />
                                 break;
                             case SystemSetting.SettingType.FLOAT:
-                                <InputNumber class="form-control bg-dark text-light" @bind-Value="settings[index].f_value" />
+                                <InputNumber class="form-control bg-dark text-light" @bind-Value="settings[index].F_Value" />
                                 break;
                             case SystemSetting.SettingType.BOOL:
-                                <InputCheckbox class="form-control bg-dark text-light" @bind-Value="settings[index].b_value" />
+                                <InputCheckbox class="form-control bg-dark text-light" @bind-Value="settings[index].B_Value" />
                                 break;
                             default: break;
                         }

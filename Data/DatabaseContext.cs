@@ -36,7 +36,7 @@ namespace Magazynek.Data
                 .IsUnique();
 
             modelBuilder.Entity<SystemSetting>()
-                .HasIndex(s => s.name)
+                .HasIndex(s => s.Name)
                 .IsUnique();
                 
             base.OnModelCreating(modelBuilder);

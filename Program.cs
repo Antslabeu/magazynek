@@ -1,5 +1,6 @@
 
 
+using System.Threading.Tasks;
 using Magazynek.Data;
 using Magazynek.Services;
 using Microsoft.EntityFrameworkCore;
@@ -53,4 +54,18 @@ app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
+
+await DoStartupThingsOnApp(app);
+
+
 app.Run();
+
+
+static async Task DoStartupThingsOnApp(WebApplication app)
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var settings = scope.ServiceProvider.GetRequiredService<ISystemSettingsService>();
+        await settings.InitSettings();
+    }
+}

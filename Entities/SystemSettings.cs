@@ -14,45 +14,45 @@ namespace Magazynek.Entities
             BOOL,
             FLOAT
         }
-        [Key] public string name { get; set; } = string.Empty;
-        [Required] public SettingType type { get; set; } = SettingType.STRING;
-        [Required] public string value { get; set; } = string.Empty;
+        [Key] [Column("name")] public string Name { get; set; } = string.Empty;
+        [Required] [Column("type")] public SettingType Type { get; set; } = SettingType.STRING;
+        [Required] [Column("value")] public string Value { get; set; } = string.Empty;
 
 
         [NotMapped]
-        public bool b_value
+        public bool B_Value
         {
-            get => value == "true";
-            set => this.value = value.ToString().ToLower();
+            get => Value == "true";
+            set => this.Value = value.ToString().ToLower();
         }
         [NotMapped]
-        public int i_value
+        public int I_Value
         {
-            get => int.TryParse(value, out int res) ? res : 0;
-            set => this.value = value.ToString();
+            get => int.TryParse(Value, out int res) ? res : 0;
+            set => this.Value = value.ToString();
         }
         [NotMapped]
-        public float f_value
+        public float F_Value
         {
-            get => float.TryParse(value, out float res) ? res : 0;
-            set => this.value = value.ToString();
+            get => float.TryParse(Value, out float res) ? res : 0;
+            set => this.Value = value.ToString();
         }
 
         protected SystemSetting() { }
 
-        public SystemSetting(string name, SettingType type, string value)
+        public SystemSetting(string name, SettingType type, string Value)
         {
-            this.name = name;
-            this.type = type;
-            this.value = value;
+            this.Name = name;
+            this.Type = type;
+            this.Value = Value;
         }
     }
 
     public static class SystemSettingHelper
     {
-        public static SystemSetting? GetSettingByName(this List<SystemSetting> list, string name)
+        public static SystemSetting? GetSettingByName(this List<SystemSetting> list, string Name)
         {
-            return list.FirstOrDefault(s => s.name == name);
+            return list.FirstOrDefault(s => s.Name == Name);
         }
     }   
 }

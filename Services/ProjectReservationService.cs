@@ -7,7 +7,7 @@ namespace Magazynek.Services
     public interface IProjectReservationService
     {
         Task<List<ProjectRealizationViewModel>> Get();
-        Task<ProjectRealizationViewModel> UpdateInfoOrInsertNew(ProjectRealizationViewModel product);
+        Task<ProjectRealizationViewModel> UpdateInfoOrInsertNew(ProjectRealizationViewModel product, bool saveChangesAsync = true);
     }
 
     public class ProjectReservationService : IProjectReservationService
@@ -25,7 +25,7 @@ namespace Magazynek.Services
 
             return realizations;
         }
-        public async Task<ProjectRealizationViewModel> UpdateInfoOrInsertNew(ProjectRealizationViewModel model)
+        public async Task<ProjectRealizationViewModel> UpdateInfoOrInsertNew(ProjectRealizationViewModel model, bool saveChangesAsync = true)
         {
             await Task.Delay(0);
             return model;
