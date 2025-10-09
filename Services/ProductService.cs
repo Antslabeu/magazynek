@@ -30,6 +30,7 @@ namespace Magazynek.Services
                 dbProduct.SetTmeID(product.tmeID);
                 dbProduct.SetDescription(product.description);
                 dbProduct.SetActive(product.active);
+                dbProduct.SetType(product.type);
             }
             else
             {
@@ -39,7 +40,8 @@ namespace Magazynek.Services
                     product.farnellID,
                     product.tmeID,
                     product.description,
-                    product.active
+                    product.active,
+                    product.type
                 );
                 await database.Products.AddAsync(dbProduct);
             }

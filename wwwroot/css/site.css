@@ -4,6 +4,9 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     background-color: #383838;
 }
+.nav-item.px-3 .nav-link i {
+    margin-right: 0.8em;
+}
 
 h1:focus {
     outline: none;
@@ -94,7 +97,7 @@ td:empty::before {
     color: #666;
     font-style: italic;
 }
-td:last-of-type {
+td.buttons-td {
     display: flex;
     justify-content: center;
     gap: 1em;

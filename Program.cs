@@ -2,6 +2,7 @@
 
 using System.Threading.Tasks;
 using Magazynek.Data;
+using Magazynek.Entities;
 using Magazynek.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

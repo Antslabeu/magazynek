@@ -14,7 +14,7 @@
     <div class="mb-3 searcher gap-4">
         <input class="form-control bg-dark text-light" type="text" placeholder="Szukaj..." @bind="searchTerm" />
         <button class="btn btn-success" @onclick="AddNew">
-            <i class="bi bi-plus-circle"></i>
+            <i class="fa-solid fa-circle-plus"></i>
         </button>
     </div>
     <table class="table table-dark table-striped table-hover align-middle">
@@ -38,12 +38,12 @@
                     <td class="text-center">@project.GetBoughtItemsPercentReadiness(shippingEntries) %</td>
                     <td class="text-center">@project.GetMissingValue(shippingEntries)</td>
                     <td class="text-center">@project.GetTotalValue(shippingEntries).ToString(format: "0.00")</td>
-                    <td>
+                    <td class="buttons-td">
                         <button class="btn btn-light" @onclick="() => Edit(project)">
-                            <i class="bi bi-pencil"></i>
+                            <i class="fa-solid fa-pen"></i>
                         </button>
                         <button class="btn btn-danger" @onclick="() => Remove(project)">
-                            <i class="bi bi-trash"></i>
+                            <i class="fa-solid fa-trash"></i>
                         </button>
                     </td>
                 </tr>
@@ -108,14 +108,14 @@
                                     </InputSelect>
                                     <InputNumber class="form-control" @bind-Value="editingProject.items[index].quantity" />
                                     <button type="button" class="btn btn-danger" @onclick="() => editingProject.Removeitem(editingProject.items[index])">
-                                        <i class="bi bi-trash"></i>
+                                        <i class="fa-solid fa-trash"></i>
                                     </button>
                                 </div>
                             }
-                            <button type="button" class="btn btn-success btn-row-add" @onclick="AddRow"><i class="bi bi-plus-circle"></i></button>
+                            <button type="button" class="btn btn-success btn-row-add" @onclick="AddRow"><i class="fa-solid fa-circle-plus"></i></button>
                         </div>
                         
-                        <button type="submit" class="btn btn-success"><i class="bi bi-floppy-fill"></i> Zapisz</button>
+                        <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i></button>
                     </EditForm>
                 </div>
             </div>

@@ -4,7 +4,7 @@
 @using Magazynek.Services
 
 @inject IProductService ProductService
-
+@inject ISystemSettingsService SystemSettingsService
 
 
 <PageTitle>Produkty</PageTitle>
@@ -13,12 +13,13 @@
     <div class="mb-3 searcher gap-4">
         <input class="form-control bg-dark text-light" type="text" placeholder="Szukaj..." @bind="searchTerm" />
         <button class="btn btn-success" @onclick="AddNew">
-            <i class="bi bi-plus-circle"></i>
+            <i class="fa-solid fa-circle-plus"></i>
         </button>
     </div>
         <table class="table table-dark table-striped table-hover align-middle">
             <thead class="table-dark border-bottom border-light">
                 <tr>
+                    <th>Typ</th>
                     <th>Nazwa</th>
                     <th>Aktywny</th>
                     <th>Opis</th>
@@ -32,21 +33,22 @@
                 @foreach (var product in filteredProducts)
                 {
                     <tr>
+                        <td>@product.type</td>
                         <td>@product.name</td>
                         <td><BoolPresentation Value="product.active" /></td>
                         <td>@product.description</td>
                         <td>@product.package</td>
                         @* <td>@product.farnellID</td> *@
                         <td>@product.tmeID</td>
-                        <td>
+                        <td class="buttons-td">
                             <button class="btn btn-success" @onclick="() => Copy(product)">
-                                <i class="bi bi-copy"></i>
+                                <i class="fa-solid fa-copy"></i>
                             </button>
                             <button class="btn btn-light" @onclick="() => Edit(product)">
-                                <i class="bi bi-pencil"></i>
+                                <i class="fa-solid fa-pen"></i>
                             </button>
                             <button class="btn btn-danger" @onclick="() => Remove(product)">
-                                <i class="bi bi-trash"></i>
+                                <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>
                     </tr>
@@ -72,6 +74,16 @@
                                 <InputText class="form-control" @bind-Value="editingProduct.name" />
                             </div>
                             <div class="mb-3">
+                                <label class="form-label">Typ</label>
+                                <InputSelect class="form-control" @bind-Value="editingProduct.type" >
+                                    @foreach(string type in productTypes)
+                                    {
+                                        bool selected = type == editingProduct.type;
+                                        <option value="@type" selected="@selected" >@type</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Opis</label>
                                 <InputText class="form-control" @bind-Value="editingProduct.description" />
                             </div>
@@ -91,7 +103,7 @@
                                 <label class="form-label">TME ID</label>
                                 <InputText class="form-control" @bind-Value="editingProduct.tmeID" />
                             </div>
-                            <button type="submit" class="btn btn-success"><i class="bi bi-floppy-fill"></i> Zapisz</button>
+                            <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i></button>
                         </EditForm>
                     </div>
                 </div>
@@ -105,7 +117,10 @@
     private string searchTerm = "";
     private ProductViewModel? editingProduct = null;
     private bool editingProductIsNew = false;
-    private List<Product> products = new();
+    private List<Product> products = new List<Product>();
+
+    private List<SystemSetting> settings = new List<SystemSetting>();
+    List<string> productTypes = new List<string>();
     
     private IEnumerable<Product> filteredProducts => products
         .Where(p => string.IsNullOrWhiteSpace(searchTerm) ||
@@ -115,7 +130,9 @@
                     p.tmeID.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnParametersSetAsync() {
-        products = (await ProductService.Get()).OrderBy(p=>p.name).ToList();
+        products = (await ProductService.Get()).OrderBy(p=>p.type).ToList();
+        settings = await SystemSettingsService.GetSettings();
+        productTypes = settings.GetSettingByType(SystemSetting.SettingName.Typy_produktów)?.A_Value ?? new List<string>();
     }
     private void Edit(Product p) {
         editingProductIsNew = false;
@@ -135,13 +152,25 @@
             farnellID: p.farnellID, 
             tmeID: p.tmeID,
             description: p.description,
-            active: p.active
+            active: p.active,
+            type: p.type
         ));
     }
     
     private void AddNew() {
+
         editingProductIsNew = true;
-        editingProduct = new ProductViewModel(new Product("NOWY","","","","",false));
+        editingProduct = new ProductViewModel(
+            product: new Product(
+                name: "NOWY",
+                package: "",
+                farnellID: "",
+                tmeID: "",
+                description: "",
+                active: false, 
+                type: Product.GetSafeDefaultType(productTypes)
+            )
+        );
     }
     private void CloseEditModal() {
         editingProduct = null;
@@ -158,6 +187,7 @@
             existingProduct.SetPackage(newProduct.package);
             existingProduct.SetFarnellID(newProduct.farnellID);
             existingProduct.SetTmeID(newProduct.tmeID);
+            existingProduct.SetType(newProduct.type);
         }
         editingProduct = null;
 

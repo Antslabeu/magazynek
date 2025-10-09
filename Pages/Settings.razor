@@ -36,28 +36,40 @@
                             case SystemSetting.SettingType.BOOL:
                                 <InputCheckbox class="form-control bg-dark text-light" @bind-Value="settings[index].B_Value" />
                                 break;
-                            default: break;
+                            case SystemSetting.SettingType.ARRAY:
+                                <EditableListPresentation @ref="editableListRef" Items="settings[index].A_Value"/>
+                                break;
                         }
                     </td>
                 </tr>
             }
         </tbody>
     </table> 
-    <button type="submit" class="btn btn-success" @onclick="SaveSettings"><i class="bi bi-floppy-fill"></i> Zapisz</button>
+    <button type="submit" class="btn btn-success" @onclick="SaveSettings"><i class="fa-solid fa-floppy-disk"></i></button>
 </div>
 
 
 @code {
     private List<SystemSetting> settings = new List<SystemSetting>();
+    private EditableListPresentation? editableListRef;
+
 
 
     protected override async Task OnParametersSetAsync()
     {
         settings = await SystemSettingsService.GetSettings();
+        settings.Sort((SystemSetting a, SystemSetting b) => a.SName.CompareTo(b.SName));
     }
 
     private async Task SaveSettings()
     {
-        foreach (SystemSetting setting in settings) await SystemSettingsService.SaveSetting(setting);
+        foreach (SystemSetting setting in settings)
+        {
+            if(setting.Type == SystemSetting.SettingType.ARRAY && editableListRef != null)
+            {
+                setting.A_Value = editableListRef.GetItems();
+            }
+            await SystemSettingsService.SaveSetting(setting);
+        }
     }
 }

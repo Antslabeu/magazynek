@@ -13,10 +13,10 @@
     <div class="mb-3 searcher gap-4">
         <input class="form-control bg-dark text-light" type="text" placeholder="Szukaj..." @bind="searchTerm" />
         <button class="btn btn-success" @onclick="AddNew">
-            <i class="bi bi-plus-circle"></i>
+            <i class="fa-solid fa-circle-plus"></i>
         </button>
         <button class="btn btn-light" @onclick="RefreshValues">
-            <i class="bi bi-arrow-clockwise"></i>
+            <i class="fa-solid fa-rotate-right"></i>
         </button>
     </div>
     <table class="table table-dark table-striped table-hover align-middle">
@@ -75,7 +75,7 @@
                                 <label class="form-label">Ilość</label>
                                 <InputNumber class="form-control" @bind-Value="editingEntry.quantity" min="0" step="1" />
                             </div>
-                            <button type="submit" class="btn btn-success">Save</button>
+                            <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i></button>
                         </EditForm>
                     </div>
                 </div>
@@ -112,11 +112,11 @@
     private string productSearch = string.Empty;
     private string searchTerm = string.Empty;
 
-    private List<ShippingEntryViewModel> shippingEntries = new();
+    private List<ShippingEntryViewModel> shippingEntries = new List<ShippingEntryViewModel>();
     private ShippingEntryViewModel? editingEntry = null;
 
-    private List<Product> allProducts = new();
-    private List<Product> filteredProducts = new();
+    private List<Product> allProducts = new List<Product>();
+    private List<Product> filteredProducts = new List<Product>();
 
     private bool isLoading = false;
     private int currentRefreshingIndex = 1;
