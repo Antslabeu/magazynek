@@ -3,17 +3,17 @@
 
 <div class="container text-center">
     <div class="row row-cols-5">
-        @for(int i = 0; i < Items.Count; i++)
+        @for(int i = 0; i < LocalItems.Count; i++)
         {
             int index = i;
             <div class="flex-grow-1" style="margin-bottom: 24px;">
                 <input class="form-control bg-dark text-light"
-                    value="@Items[index]"
+                    value="@LocalItems[index]"
                     @oninput="(e => OnInputChanged(index, e))" />
             </div>
         }
         <div class="flex-grow-1">
-            <button class="btn btn-success" type="button" @onclick="() => { Items.Add(newValue); }">
+            <button class="btn btn-success" type="button" @onclick="() => { LocalItems.Add(newValue); }">
             <i class="fa-solid fa-plus"></i>
             </button>
         </div>
@@ -25,18 +25,19 @@
 
 @code {
     [Parameter] [Required] public List<string> Items { get; set; } = new List<string>();
+    private List<string> LocalItems { get; set; } = new List<string>();
 
-    public List<string> GetItems() => Items;
+    public List<string> GetItems() => LocalItems;
     private string newValue = "Nowy";
 
     protected override void OnParametersSet()
     {
-        for (int i = 0; i < Items.Count; i++) Items[i] ??= string.Empty;
+        if(LocalItems.Count == 0) LocalItems = new List<string>(Items);
     }
     private void OnInputChanged(int index, ChangeEventArgs e)
     {
-        if (index < 0 || index >= Items.Count) return;
-        Items[index] = e.Value?.ToString() ?? string.Empty;
-
+        if (index < 0 || index >= LocalItems.Count) return;
+        LocalItems[index] = e.Value?.ToString() ?? string.Empty;
     }
+
 }

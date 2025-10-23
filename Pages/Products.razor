@@ -133,6 +133,8 @@
         products = (await ProductService.Get()).OrderBy(p=>p.type).ToList();
         settings = await SystemSettingsService.GetSettings();
         productTypes = settings.GetSettingByType(SystemSetting.SettingName.Typy_produktów)?.A_Value ?? new List<string>();
+
+        productTypes.Sort();
     }
     private void Edit(Product p) {
         editingProductIsNew = false;
