@@ -10,27 +10,27 @@
 <PageTitle>Produkty</PageTitle>
 
 <div class="container mt-4">
-    <div class="mb-3 searcher gap-4">
-        <input class="form-control bg-dark text-light" type="text" placeholder="Szukaj..." @bind="searchTerm" />
-        <button class="btn btn-success" @onclick="AddNew">
-            <i class="fa-solid fa-circle-plus"></i>
-        </button>
-    </div>
-        <table class="table table-dark table-striped table-hover align-middle">
-            <thead class="table-dark border-bottom border-light">
-                <tr>
-                    <th>Typ</th>
-                    <th>Nazwa</th>
-                    <th>Aktywny</th>
-                    <th>Opis</th>
-                    <th>Obudowa</th>
-                    @* <th>Farnell ID</th> *@
-                    <th>TME ID</th>
-                    <th class="button-th">Akcje</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var product in filteredProducts)
+    <SearchBar
+        OnSearchChanged="SearchChanged"
+        SearchBarButtons=@searchBarButtons
+    />
+    <table class="table table-dark table-striped table-hover align-middle">
+        <thead class="table-dark border-bottom border-light">
+            <tr>
+                <th>Typ</th>
+                <th>Nazwa</th>
+                <th>Aktywny</th>
+                <th>Opis</th>
+                <th>Obudowa</th>
+                @* <th>Farnell ID</th> *@
+                <th>TME ID</th>
+                <th class="button-th buttons-3">Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(filteredProducts != null)
+            {
+                @foreach (Product product in filteredProducts)
                 {
                     <tr>
                         <td>@product.type</td>
@@ -53,67 +53,24 @@
                         </td>
                     </tr>
                 }
-            </tbody>
-        </table>
-
-    @if (editingProduct != null)
-    {
-        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog">
-                <div class="modal-content text-light bg-dark">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            @(editingProductIsNew ? "Dodaj produkt" : "Modyfikuj produkt")
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" @onclick="CloseEditModal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <EditForm Model="editingProduct" OnValidSubmit="SaveProduct" >
-                            <div class="mb-3">
-                                <label class="form-label">Nazwa</label>
-                                <InputText class="form-control" @bind-Value="editingProduct.name" />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Typ</label>
-                                <InputSelect class="form-control" @bind-Value="editingProduct.type" >
-                                    @foreach(string type in productTypes)
-                                    {
-                                        bool selected = type == editingProduct.type;
-                                        <option value="@type" selected="@selected" >@type</option>
-                                    }
-                                </InputSelect>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Opis</label>
-                                <InputText class="form-control" @bind-Value="editingProduct.description" />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Aktywny</label>
-                                <InputCheckbox @bind-Value="editingProduct.active" class="form-controldot"/>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Obudowa</label>
-                                <InputText class="form-control" @bind-Value="editingProduct.package" />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Farnell ID</label>
-                                <InputText class="form-control" @bind-Value="editingProduct.farnellID" />
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">TME ID</label>
-                                <InputText class="form-control" @bind-Value="editingProduct.tmeID" />
-                            </div>
-                            <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i></button>
-                        </EditForm>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
+            }
+        </tbody>
+    </table>
+    <EditModal
+        Title="@(editingProductIsNew ? "Dodaj produkt" : "Modyfikuj produkt")"
+        Model="editingProduct"
+        OnSubmit="@SaveProduct"
+        OnModalClose="@CloseEditModal"
+        DropdownOptions="@dropdowns"
+        @ref="ModalRef"
+    />
 </div>
 
 
 @code {
+    List<SearchBar.SearchBarButtonItem>? searchBarButtons;
+
+    private EditModal? ModalRef;
     private string searchTerm = "";
     private ProductViewModel? editingProduct = null;
     private bool editingProductIsNew = false;
@@ -122,12 +79,21 @@
     private List<SystemSetting> settings = new List<SystemSetting>();
     List<string> productTypes = new List<string>();
     
-    private IEnumerable<Product> filteredProducts => products
-        .Where(p => string.IsNullOrWhiteSpace(searchTerm) ||
-                    p.name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.package.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.farnellID.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.tmeID.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+    private IEnumerable<Product>? filteredProducts;
+
+    private Dictionary<string, List<string>> dropdowns = new Dictionary<string, List<string>>();
+
+    private void SearchChanged(string query) {
+        searchTerm = query;
+        filteredProducts = products
+            .Where(p => string.IsNullOrWhiteSpace(query) ||
+                p.type.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                p.name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                p.package.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                p.farnellID.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                p.tmeID.Contains(query, StringComparison.OrdinalIgnoreCase));
+        StateHasChanged();
+    }
 
     protected override async Task OnParametersSetAsync() {
         products = (await ProductService.Get()).OrderBy(p=>p.type).ToList();
@@ -135,10 +101,22 @@
         productTypes = settings.GetSettingByType(SystemSetting.SettingName.Typy_produktów)?.A_Value ?? new List<string>();
 
         productTypes.Sort();
+        dropdowns.Add("type", productTypes);
+        SearchChanged("");
+    }
+    protected override void OnInitialized() {
+        searchBarButtons = new List<SearchBar.SearchBarButtonItem> {
+            new SearchBar.SearchBarButtonItem {
+                Class = "btn-success",
+                Icon = "fa-solid fa-plus",
+                OnClick = EventCallback.Factory.Create(this, AddNew)
+            }
+        };
     }
     private void Edit(Product p) {
         editingProductIsNew = false;
         editingProduct = new ProductViewModel(p);
+        ModalRef?.Show();
     }
     private async void Remove(Product p) {
         await ProductService.Remove(p);
@@ -157,10 +135,10 @@
             active: p.active,
             type: p.type
         ));
+        ModalRef?.Show();
     }
     
     private void AddNew() {
-
         editingProductIsNew = true;
         editingProduct = new ProductViewModel(
             product: new Product(
@@ -173,11 +151,12 @@
                 type: Product.GetSafeDefaultType(productTypes)
             )
         );
+        ModalRef?.Show();
     }
     private void CloseEditModal() {
         editingProduct = null;
     }
-    private async void SaveProduct(EditContext context)
+    private async void SaveProduct(object _)
     {
         if(editingProduct == null) return;
 
@@ -194,6 +173,7 @@
         editingProduct = null;
 
         products = products.OrderBy(p=>p.name).ToList();
-        StateHasChanged();
+
+        SearchChanged(searchTerm);
     }
 }

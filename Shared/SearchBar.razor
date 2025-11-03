@@ -1,0 +1,52 @@
+@using System.ComponentModel.DataAnnotations
+
+
+
+
+<link rel="stylesheet" href="css/components/search-bar.css">
+
+<div class="searcher">
+    <form @onsubmit="OnSearchChangedInternal">
+        <InputText class="form-control bg-dark text-light"
+            @bind-Value="searchTerm"
+            placeholder="Szukaj..." />
+        <div class="horizontal-spacer width-sm"></div>
+        <button type="submit" class="btn btn-success">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+    </form>
+
+    @if(SearchBarButtons != null)
+    {
+        <div class="horizontal-spacer width-md"></div>
+        @foreach(SearchBarButtonItem button in SearchBarButtons)
+        {
+            <button class="btn @button.Class" @onclick="button.OnClick">
+                <i class="@button.Icon"></i>
+            </button>
+            <div class="horizontal-spacer width-md"></div>
+        }
+    }
+</div>
+
+
+
+
+@code {
+    public class SearchBarButtonItem
+    {
+        public string Class { get; set; } = string.Empty;
+        public string Icon { get; set; } = string.Empty;
+        public EventCallback OnClick { get; set; }
+    }
+    string searchTerm = string.Empty;
+
+    [Parameter] [Required] public EventCallback<string> OnSearchChanged { get; set; }
+    [Parameter] public List<SearchBarButtonItem>? SearchBarButtons {get; set; }
+
+    private async Task OnSearchChangedInternal()
+    {
+        await OnSearchChanged.InvokeAsync(searchTerm);
+    }
+    
+}

@@ -1,0 +1,81 @@
+input.form-control {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 12px;
+    color: #e8e8e8;
+    padding: 8px 14px;
+    transition: all 0.25s ease;
+    box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.05);
+}
+input.form-control:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow:
+        0 0 10px rgba(0, 255, 170, 0.2),
+        inset 0 0 10px rgba(0, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
+}
+input.form-control:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+select.form-control {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 12px;
+    color: #e8e8e8;
+    padding: 8px 14px;
+    transition: all 0.25s ease;
+    box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.05);
+    font-size: var(--font-size-md);
+    font-family: var(--font-main);
+    cursor: pointer;
+    width: 100%;
+    background-image: linear-gradient(
+        45deg,
+        transparent 50%,
+        rgba(255, 255, 255, 0.6) 50%
+    ),
+    linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.6) 50%,
+        transparent 50%
+    );
+    background-position: calc(100% - 18px) center,
+                         calc(100% - 14px) center;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+}
+
+select.form-control:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow:
+        0 0 10px rgba(0, 255, 170, 0.2),
+        inset 0 0 10px rgba(0, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
+}
+select.form-control:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+select.form-control option {
+    background: #1b1b1b;
+    color: #e8e8e8;
+    border: none;
+}
+/* Drobny fix dla Safari */
+@supports (-webkit-touch-callout: none) {
+    select.form-select {
+        background-position: right 12px center;
+    }
+}

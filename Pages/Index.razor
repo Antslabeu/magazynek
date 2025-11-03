@@ -10,15 +10,10 @@
 <PageTitle>Ilości</PageTitle>
 
 <div class="container mt-4">
-    <div class="mb-3 searcher gap-4">
-        <input class="form-control bg-dark text-light" type="text" placeholder="Szukaj..." @bind="searchTerm" />
-        <button class="btn btn-success" @onclick="AddNew">
-            <i class="fa-solid fa-circle-plus"></i>
-        </button>
-        <button class="btn btn-light" @onclick="RefreshValues">
-            <i class="fa-solid fa-rotate-right"></i>
-        </button>
-    </div>
+    <SearchBar
+        OnSearchChanged="SearchChanged"
+        SearchBarButtons=@searchBarButtons
+    />
     <table class="table table-dark table-striped table-hover align-middle">
         <thead class="table-dark border-bottom border-light">
             <tr>
@@ -32,19 +27,22 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (ShippingEntryViewModel shippingEntry in filteredShippings)
+            @if(filteredShippings != null)
             {
-                bool qtyZero = shippingEntry.quantity == 0;
-                bool stockZero = shippingEntry.stock == 0;
-                <tr>
-                    <td class="@(stockZero || qtyZero? "text-danger":"")">@shippingEntry.product.name</td>
-                    <td>@shippingEntry.product.description</td>
-                    <td>@shippingEntry.product.package</td>
-                    <td class="@(qtyZero? "text-danger":"")">@shippingEntry.quantity</td>
-                    @* <td>@shippingEntry.stockValue.ToString("0.00")</td> *@
-                    <td>@shippingEntry.product.tmeID</td>
-                    <td class="@(stockZero? "text-danger":"")">@shippingEntry.stock</td>
-                </tr>
+                @foreach (ShippingEntryViewModel shippingEntry in filteredShippings)
+                {
+                    bool qtyZero = shippingEntry.quantity == 0;
+                    bool stockZero = shippingEntry.stock == 0;
+                    <tr>
+                        <td class="@(stockZero || qtyZero? "text-danger":"")">@shippingEntry.product.name</td>
+                        <td>@shippingEntry.product.description</td>
+                        <td>@shippingEntry.product.package</td>
+                        <td class="@(qtyZero? "text-danger":"")">@shippingEntry.quantity</td>
+                        @* <td>@shippingEntry.stockValue.ToString("0.00")</td> *@
+                        <td>@shippingEntry.product.tmeID</td>
+                        <td class="@(stockZero? "text-danger":"")">@shippingEntry.stock</td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
@@ -59,7 +57,7 @@
                         <button type="button" class="btn-close btn-close-white" @onclick="CloseAddModal"></button>
                     </div>
                     <div class="modal-body">
-                        <EditForm Model="editingEntry" OnValidSubmit="SaveEntry">
+                        @* <EditForm Model="editingEntry" OnValidSubmit="SaveEntry">
                             <label class="form-label">Wybierz produkt</label>
                             <InputText class="form-control mb-2" placeholder="Szukaj..." 
                                 @bind-Value="productSearch" 
@@ -76,7 +74,7 @@
                                 <InputNumber class="form-control" @bind-Value="editingEntry.quantity" min="0" step="1" />
                             </div>
                             <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i></button>
-                        </EditForm>
+                        </EditForm> *@
                     </div>
                 </div>
             </div>
@@ -109,8 +107,8 @@
 
 
 @code {
-    private string productSearch = string.Empty;
     private string searchTerm = string.Empty;
+    List<SearchBar.SearchBarButtonItem>? searchBarButtons;
 
     private List<ShippingEntryViewModel> shippingEntries = new List<ShippingEntryViewModel>();
     private ShippingEntryViewModel? editingEntry = null;
@@ -121,20 +119,24 @@
     private bool isLoading = false;
     private int currentRefreshingIndex = 1;
 
-    private IEnumerable<ShippingEntryViewModel> filteredShippings => shippingEntries
-        .Where(e => string.IsNullOrWhiteSpace(searchTerm) ||
-                    e.product.name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    e.product.package.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    e.product.farnellID.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    e.product.tmeID.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+    private IEnumerable<ShippingEntryViewModel>? filteredShippings;
+
+    private void SearchChanged(string query) {
+        searchTerm = query;
+        filteredShippings = shippingEntries
+             .Where(e => string.IsNullOrWhiteSpace(query) ||
+                    e.product.name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    e.product.package.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    e.product.farnellID.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    e.product.tmeID.Contains(query, StringComparison.OrdinalIgnoreCase));
+        StateHasChanged();
+    }
 
     protected override async Task OnInitializedAsync()
     {
         allProducts = await ProductService.Get();
         shippingEntries = (await ShippingEntryService.GetModels()).OrderBy(se => se.product.name).ToList();
 
-
-        // if there is product defined but no shipping entry, create empty shipping entry
         foreach(Product p in allProducts)
         {
             ShippingEntryViewModel? entry = shippingEntries.FirstOrDefault(se => se.product.id == p.id);
@@ -148,10 +150,23 @@
                 shippingEntries.Add(entry);
             }
         }
-            
 
-        FilterProducts();
+        searchBarButtons = new List<SearchBar.SearchBarButtonItem> {
+            new SearchBar.SearchBarButtonItem {
+                Class = "btn-success",
+                Icon = "fa-solid fa-plus",
+                OnClick = EventCallback.Factory.Create(this, AddNew)
+            },
+            new SearchBar.SearchBarButtonItem {
+                Class = "btn-light",
+                Icon = "fa-solid fa-rotate-right",
+                OnClick = EventCallback.Factory.Create(this, RefreshValues)
+            }
+        };
+
+        SearchChanged(searchTerm);
     }
+
     private void AddNew() => editingEntry = ShippingEntryViewModel.Empty();
     private void CloseAddModal() => editingEntry = null;
     private async void SaveEntry(EditContext context)
@@ -215,11 +230,5 @@
 
         if (selectedProduct != null) editingEntry.product = selectedProduct;
     }
-    private void FilterProducts()
-    {
-        filteredProducts = allProducts
-            .Where(p => string.IsNullOrWhiteSpace(productSearch) || p.name.Contains(productSearch, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(p=>p.name)
-            .ToList();
-    }
+
 }

@@ -27,7 +27,8 @@ ehthumbs.db
 Desktop.ini
 
 # Environment / secrets
-.env
+main.env
+local.env
 *.secret
 secrets.json
 appsettings.Development.json
@@ -58,3 +59,6 @@ __pycache__/
 docker-compose.override.yml
 *.tar
 .fake
+
+# fontawesome 
+wwwroot/fontawesome/*

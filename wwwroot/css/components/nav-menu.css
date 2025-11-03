@@ -1,0 +1,137 @@
+/* ==== navmenu.css ==== */
+
+/* Cały sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border-right: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+  z-index: var(--z-nav);
+  overflow: hidden;
+}
+
+/* Górny pasek z logo */
+.sidebar .top-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 130px;
+  border-bottom: 1px solid var(--glass-border);
+  background: var(--glass-hover-bg);
+  margin-bottom: var(--space-md);
+}
+
+/* Logo / tytuł aplikacji */
+.sidebar .top-row img,
+.sidebar .top-row h1 {
+  max-height: unset;
+  height: -webkit-fill-available;
+  margin: auto;
+}
+
+/* Sekcja z linkami */
+.nav-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md) 0;
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+/* Pojedynczy element */
+.nav-item {
+  padding: var(--space-sm) var(--space-lg);
+  transition: background var(--transition-fast), color var(--transition-fast);
+  border-radius: var(--border-radius-sm);
+  margin: var(--space-xs) var(--space-sm);
+}
+
+.nav-item a {
+  display: block;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-weight: var(--font-weight-normal);
+  font-size: var(--font-size-md);
+}
+
+/* Hover / aktywny */
+.nav-item:hover,
+.nav-item.active {
+  background: var(--glass-hover-bg);
+}
+.nav-item:visited {
+    color: var(--text-main);
+}
+
+.nav-item:hover a,
+.nav-item.active a {
+  color: var(--accent-primary);
+}
+
+/* Pasek przewijania w menu */
+.nav-scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+.nav-scrollable::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+}
+.nav-scrollable::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Dostosowanie głównej treści (body/main) do szerokości sidebaru) */
+body {
+  padding-left: 260px;
+}
+
+/* Ujednolicenie kolorów linków w sidebarze */
+.nav-item:link,
+.nav-item:visited {
+  color: var(--text-dim);
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: var(--accent-primary);
+}
+
+.nav-item:hover svg,
+.nav-item.active svg {
+  color: var(--accent-primary);
+}
+
+/* Ujednolicenie koloru ikon */
+.nav-item svg {
+  color: var(--accent-primary);
+  opacity: 0.85;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.nav-item:hover svg {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    width: 200px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  body {
+    padding-left: 0;
+  }
+}

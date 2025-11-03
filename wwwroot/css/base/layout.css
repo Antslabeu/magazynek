@@ -1,0 +1,116 @@
+/* ==== layout.css ==== */
+
+/* Globalne ustawienia strony */
+body {
+  /* background: var(--bg-main); */
+  font-family: var(--font-main);
+  color: var(--text-main);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+
+  background-image: url('../../media/bg-2.png');
+}
+
+/* Wyrównanie i maksymalna szerokość */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-lg);
+  padding-top: 0;
+}
+
+/* ======= Navbar ======= */
+.navbar-glass {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+}
+
+.navbar-glass a {
+  color: var(--text-main);
+  font-weight: var(--font-weight-bold);
+  transition: color var(--transition-fast);
+}
+
+.navbar-glass a:hover {
+  color: var(--accent-primary);
+}
+
+/* ======= Main content ======= */
+div.page {
+  flex-direction: column;
+  display: flex;
+  height: 100vh;
+}
+div.main {
+  flex: 1;
+  padding: var(--space-lg) var(--space-lg) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* ======= Footer ======= */
+footer {
+  text-align: center;
+  padding: var(--space-md);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border-top: 1px solid var(--glass-border);
+  color: var(--text-dim);
+  font-size: var(--font-size-sm);
+}
+
+/* ======= Utility classes ======= */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-hover:hover {
+  background: var(--glass-hover-bg);
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+/* ======= Backdrop filter support for footer ======= */
+@supports (-webkit-backdrop-filter: blur(0)) {
+  footer {
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+}
+
+/* ======= Scrollbar (ciemny, minimalistyczny) ======= */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}

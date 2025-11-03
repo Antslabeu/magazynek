@@ -1,0 +1,69 @@
+:root {
+  /* ==== Glassmorphism core ==== */
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.25);
+  --glass-hover-bg: rgba(255, 255, 255, 0.12);
+  --glass-blur: 12px;
+
+  /* ==== Accent colors ==== */
+  --accent-primary: #3F89CF;
+  --accent-secondary: #ffb347;
+  --accent-error: #ff5555;
+  --accent-success: #7eff9c;
+
+  --accent-primary-dark: #2e6ea8;
+  --accent-secondary-dark: #d68a2d;
+  --accent-error-dark: #cc3b3b;
+  --accent-success-dark: #4ecf78;
+
+  /* ==== Text colors ==== */
+  --text-main: #ffffff;
+  --text-dim: rgba(255, 255, 255, 0.75);
+  --text-muted: rgba(255, 255, 255, 0.5);
+
+  /* ==== Backgrounds ==== */
+  --bg-main: linear-gradient(135deg, #1b1b1b, #2a2a2a);
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --blur-size: 8px;
+
+  /* ==== Borders & Shadows ==== */
+  --border-radius-sm: 8px;
+  --border-radius-md: 16px;
+  --border-radius-lg: 24px;
+  --shadow-glass: 0 4px 24px rgba(0, 0, 0, 0.4);
+
+  /* ==== Spacing ==== */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 48px;
+
+  /* ==== Typography ==== */
+  --font-main: 'Inter', 'Segoe UI', sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-bold: 600;
+
+  /* ==== Transition ==== */
+  --transition-fast: 0.2s ease;
+  --transition-slow: 0.4s ease;
+
+  /* ==== Z-index ==== */
+  --z-nav: 1000;
+  --z-modal: 1050;
+  --z-overlay: 1100;
+}
+
+/* ==== Dark mode base ==== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.07);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --bg-main: linear-gradient(135deg, #101010, #242424);
+  }
+}

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using magazynek.Data;
 
 namespace Magazynek.Entities;
 
@@ -75,14 +76,15 @@ public class Product
 
 public class ProductViewModel
 {
-    public Guid id { get; private set; }
-    public string name { get; set; } = "";
-    public string description { get; set; } = "";
-    public string package { get; set; } = "";
-    public string farnellID { get; set; } = "";
-    public string tmeID { get; set; } = "";
-    public bool active { get; set; }
-    public string type { get; set; }
+    [EditableField("Id", IsEditable: false)] public Guid id { get; private set; }
+    [EditableField("Typ", IsEditable: true, EditableFieldAttribute.InputType.Dropdown)] public string type { get; set; }
+    [EditableField("Nazwa", IsEditable: true)] public string name { get; set; } = "";
+    [EditableField("Opis", IsEditable: true)] public string description { get; set; } = "";
+    [EditableField("Obudowa", IsEditable: true)] public string package { get; set; } = "";
+    [EditableField("Farnell ID", IsEditable: true)] public string farnellID { get; set; } = "";
+    [EditableField("TME ID", IsEditable: true)] public string tmeID { get; set; } = "";
+    [EditableField("Aktywny", IsEditable: true, EditableFieldAttribute.InputType.Checkbox)] public bool active { get; set; }
+    
 
     public ProductViewModel(Product product)
     {

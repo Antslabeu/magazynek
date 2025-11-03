@@ -22,7 +22,9 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     serverOptions.ListenAnyIP(5035);
 });
 
-string connectionString = EnvironmentConfig.GetPostgresConnectionString();
+string envFileName = "local.env";
+
+string connectionString = EnvironmentConfig.GetPostgresConnectionString(envFileName);
 
 builder.Services.AddDbContextFactory<DatabaseContext>(options =>
 {

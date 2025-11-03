@@ -24,7 +24,10 @@
 </ItemGroup>
 
 <ItemGroup>
-  <Content Include=".env">
+  <Content Include="local.env">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </Content>
+  <Content Include="main.env">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </Content>
 </ItemGroup>
