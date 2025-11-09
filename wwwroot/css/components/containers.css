@@ -1,3 +1,12 @@
 div.container-fluid.h100 {
    height: 100%;
  }
+ div.row-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+ }
+ div.container.no-margin-padding {
+   margin: 0;
+   padding: 0;
+ }

@@ -36,7 +36,12 @@
 .invalid {
     outline: 1px solid red;
 }
-
+.w-100 {
+    width: 100%;
+}
+div.flex-grow-1 {
+    flex-grow: 1;
+}
 
 
 

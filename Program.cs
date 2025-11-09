@@ -22,7 +22,7 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     serverOptions.ListenAnyIP(5035);
 });
 
-string envFileName = "local.env";
+string envFileName = "main.env";
 
 string connectionString = EnvironmentConfig.GetPostgresConnectionString(envFileName);
 

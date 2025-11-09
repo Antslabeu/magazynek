@@ -11,7 +11,7 @@
     <table class="table table-dark table-striped table-hover align-middle">
         <thead class="table-dark border-bottom border-light">
             <tr>
-                <th>Nazwa</th>
+                <th style="width:250px;">Nazwa</th>
                 <th>Parametr</th>
             </tr>
         </thead>
@@ -25,13 +25,13 @@
                         @switch(settings[index].Type)
                         {
                             case SystemSetting.SettingType.STRING:
-                                <InputText class="form-control bg-dark text-light" @bind-Value="settings[index].Value" />
+                                <InputText class="form-control bg-dark w-100 text-light" @bind-Value="settings[index].Value" />
                                 break;
                             case SystemSetting.SettingType.INT:
-                                <InputNumber class="form-control bg-dark text-light" @bind-Value="settings[index].I_Value" />
+                                <InputNumber class="form-control bg-dark w-100 text-light" @bind-Value="settings[index].I_Value" />
                                 break;
                             case SystemSetting.SettingType.FLOAT:
-                                <InputNumber class="form-control bg-dark text-light" @bind-Value="settings[index].F_Value" />
+                                <InputNumber class="form-control bg-dark w-100 text-light" @bind-Value="settings[index].F_Value" />
                                 break;
                             case SystemSetting.SettingType.BOOL:
                                 <InputCheckbox class="form-control bg-dark text-light" @bind-Value="settings[index].B_Value" />
