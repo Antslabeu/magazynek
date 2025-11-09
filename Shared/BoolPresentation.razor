@@ -1,20 +1,20 @@
 <style>
-    .bi-ban {
-        color: #ff8080;
+    .fa-circle-xmark {
+        color: var(--accent-error);
     }
-    .bi-check-circle {
-        color: #80ff80;
+    .fa-circle-check {
+        color: var(--accent-success);
     }
 </style>
 
 
 @if(Value)
 {
-    <i class="bi bi-check-circle"></i>
+    <i class="fa-solid fa-circle-check"></i>
 }
 else 
 {
-    <i class="bi bi-ban"></i>
+    <i class="fa-solid fa-circle-xmark"></i>
 }
 
 

@@ -79,3 +79,35 @@ select.form-control option {
         background-position: right 12px center;
     }
 }
+
+.cb-input {
+  position: absolute;
+  inset: 0;
+  width: 1px; height: 1px;
+  opacity: 0;
+}
+.cb {
+  --cb-size: 22px;
+  --cb-radius: 8px;
+  --cb-accent: var(--accent-primary);
+  --cb-check: var(--text-main);
+
+  display: block;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-main);
+  cursor: pointer;
+  width: 66px;
+  text-align: center !important;
+
+  /* delikatne szkło na całym polu kliknięcia */
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.cb:hover { 
+    background: var(--glass-hover-bg);
+}

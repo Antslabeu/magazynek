@@ -1,0 +1,25 @@
+@using System.ComponentModel.DataAnnotations
+<div class="cb-field">
+    <input id="@guid" class="cb-input" type="checkbox" checked="@IsChecked" @onchange="@(e => IsCheckedChanged.InvokeAsync(((ChangeEventArgs)e).Value as bool? == true))" />
+    <label for="@guid" class="cb" style="@(IsChecked? "background-color: rgb(from var(--accent-success) r g b / 0.1);": "background-color: rgb(from var(--accent-error) r g b / 0.1);")">
+      <span class="cb-box" aria-hidden="true"></span>
+      <span class="cb-text">
+        @if(IsChecked)
+        {
+            <i class="fa-solid fa-circle-check"></i>
+        }
+        else 
+        {
+            <i class="fa-solid fa-circle-xmark"></i>
+        }
+      </span>
+    </label>
+  </div>
+
+
+  @code {
+    [Parameter] [Required] public bool IsChecked { get; set; }
+    [Parameter] [Required] public EventCallback<bool> IsCheckedChanged { get; set; }
+
+    private Guid guid = Guid.NewGuid();
+  }

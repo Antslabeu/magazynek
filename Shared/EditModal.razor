@@ -39,12 +39,9 @@
                                             ValueChanged="@(val => BindDecimal(prop, (decimal)val))" />
                                         break;
                                     case EditableFieldAttribute.InputType.Checkbox:
-                                        <input 
-                                            type="checkbox"
-                                            id="@fieldId"
-                                            class="form-check-input"
-                                            checked="@(BindBool(prop))"
-                                            @onchange="e => BindBool(prop, e.Value is bool b && b)" />
+                                        <BetterChecker 
+                                            IsChecked="BindBool(prop)" 
+                                            IsCheckedChanged="@(val => BindBool(prop, val))" />
                                         break;
                                     case EditableFieldAttribute.InputType.Dropdown:
                                         List<string>? options = null;
