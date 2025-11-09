@@ -6,27 +6,32 @@
 <link rel="stylesheet" href="css/components/search-bar.css">
 
 <div class="searcher">
-    <form @onsubmit="OnSearchChangedInternal">
-        <InputText class="form-control bg-dark text-light"
-            @bind-Value="searchTerm"
-            placeholder="Szukaj..." />
-        <div class="horizontal-spacer width-sm"></div>
-        <button type="submit" class="btn btn-success">
-            <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-    </form>
-
-    @if(SearchBarButtons != null)
-    {
-        <div class="horizontal-spacer width-md"></div>
-        @foreach(SearchBarButtonItem button in SearchBarButtons)
-        {
-            <button class="btn @button.Class" @onclick="button.OnClick">
-                <i class="@button.Icon"></i>
+    <div class="searcher-content">
+        <form @onsubmit="OnSearchChangedInternal">
+            <InputText class="form-control bg-dark text-light"
+                @bind-Value="searchTerm"
+                placeholder="Szukaj..." />
+            <div class="horizontal-spacer width-sm"></div>
+            <button type="submit" class="btn btn-success">
+                <i class="fa-solid fa-magnifying-glass"></i>
             </button>
+        </form>
+
+        @if(SearchBarButtons != null)
+        {
             <div class="horizontal-spacer width-md"></div>
+            @foreach(SearchBarButtonItem button in SearchBarButtons)
+            {
+                <button class="btn @button.Class" @onclick="button.OnClick">
+                    <i class="@button.Icon"></i>
+                </button>
+                <div class="horizontal-spacer width-md"></div>
+            }
         }
-    }
+    </div>
+    <div class="searcher-item-count">
+        <span class="searcher-item-count"><i class="fa-solid fa-list-ul"></i> @ItemCount</span>
+    </div>
 </div>
 
 
@@ -43,6 +48,7 @@
 
     [Parameter] [Required] public EventCallback<string> OnSearchChanged { get; set; }
     [Parameter] public List<SearchBarButtonItem>? SearchBarButtons {get; set; }
+    [Parameter] public int ItemCount { get; set; }
 
     private async Task OnSearchChangedInternal()
     {

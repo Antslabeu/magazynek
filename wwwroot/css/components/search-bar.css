@@ -1,5 +1,10 @@
 div.searcher {
     display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+div.searcher-content {
+    display: flex;
     margin-bottom: var(--space-sm);
     gap: var(--space-md);
 }
@@ -25,4 +30,14 @@ div.searcher {
 .searcher input:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.25);
+}
+
+div.searcher-item-count {
+    padding-right: var(--space-md);
+}
+span.searcher-item-count {
+    height: 100%;
+    display: block;
+    font-size: 24px;
+    color: var(--text-main);
 }

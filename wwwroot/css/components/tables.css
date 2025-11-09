@@ -6,11 +6,11 @@ th.button-th.buttons-2 {
 }
 th.button-th {
     text-align: center !important;
-    border-left: 1px solid var(--text-main);
+    /* border-left: 1px solid var(--text-main); */
 }
 
 td.buttons-td {
-    border-left: 1px solid var(--text-main);
+    /* border-left: 1px solid var(--text-main); */
     display: flex;
     flex-wrap: wrap;
     justify-content: space-evenly;

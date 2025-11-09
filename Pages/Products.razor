@@ -13,6 +13,7 @@
     <SearchBar
         OnSearchChanged="SearchChanged"
         SearchBarButtons=@searchBarButtons
+        ItemCount="filteredProducts?.Count() ?? 0"
     />
     <table class="table table-dark table-striped table-hover align-middle">
         <thead class="table-dark border-bottom border-light">
