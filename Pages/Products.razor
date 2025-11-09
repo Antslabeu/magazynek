@@ -172,7 +172,7 @@
         }
         editingProduct = null;
 
-        products = products.OrderBy(p=>p.name).ToList();
+        products = products.OrderBy(p=>p.type).ToList();
 
         SearchChanged(searchTerm);
     }
