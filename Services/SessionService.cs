@@ -17,6 +17,12 @@ namespace Magazynek.Services
             "login",
             "activate"
         };
+
+        public static readonly List<string> adminNeededPages = new List<string>()
+        {
+            "system-settings"
+        };
+
         public static readonly TimeSpan logoutTime = TimeSpan.FromMinutes(30);
 
         Task<Session> GetOrCreateSession(ProtectedSessionStorage sessionStorage);
@@ -29,6 +35,13 @@ namespace Magazynek.Services
         Task AddNewUser(User user);
         Task<bool> TryActivateUser(Guid activateGuid, User user);
         Task<User> DeactivateUser(User user);
+        Task UpdatePassword(User user, string password);
+
+        List<Session> GetSessions();
+        Task<List<User>> GetAllUsers();
+
+        void Admin_DeleteSession(Session s);
+        Task Admin_DeleteUser(User user);
     }
 
     public class SessionService : ISessionService
@@ -145,6 +158,34 @@ namespace Magazynek.Services
             await database.SaveChangesAsync();
             return dbUser;
         }
+        public async Task UpdatePassword(User user, string password)
+        {
+            using var scope = serviceProvider.CreateScope();
+            var database = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
 
+            User? dbUser = await database.Users.FirstOrDefaultAsync(u => u.id == user.id);
+            if (dbUser == null) return;
+
+            dbUser.SetPassword(password);
+            dbUser.SetActive(dbUser.activatorGuid);
+            await database.SaveChangesAsync();
+        }
+
+        public List<Session> GetSessions() => sessions;
+
+        public void Admin_DeleteSession(Session s)
+        {
+            sessions.Remove(s);
+        }
+        public async Task<List<User>> GetAllUsers()
+        {
+            using var scope = serviceProvider.CreateScope();
+            var database = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+            return await database.Users.ToListAsync();
+        }
+        public async Task Admin_DeleteUser(User user)
+        {
+            
+        }
     }
 }

@@ -59,11 +59,22 @@
             <NavMenuItem currentPage="@path" linkedPage="/settings">
                 <i class="fa-solid fa-user-gear"></i> Ustawienia konta
             </NavMenuItem>
-            <NavMenuItem currentPage="@path" linkedPage="/system-settings">
-                <i class="fa-solid fa-sliders"></i> Ustawienia systemu
+
+            <div class="menu-spacer"></div>
+
+            <NavMenuItem currentPage="@path" linkedPage="/">
+                <i class="fa-solid fa-house-chimney"></i> O projekcie
             </NavMenuItem>
 
             <div class="menu-spacer"></div>
+
+            @if(activeSession != null && activeSession.user != null && activeSession.user.userRole == User.UserRole.Admin)
+            {
+                <NavMenuItem currentPage="@path" linkedPage="/system-settings">
+                    <i class="fa-solid fa-sliders"></i> System
+                </NavMenuItem>
+                <div class="menu-spacer"></div>
+            }
 
             <NavMenuItem currentPage="@path" linkedPage="/logout">
                 <i class="fa-solid fa-right-from-bracket"></i> Wyloguj
@@ -94,6 +105,7 @@
     {
         path = Normalize(Nav.ToBaseRelativePath(Nav.Uri));
         activeSession = await SessionService.GetOrCreateSession(SessionStorage);
+        StateHasChanged();
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

@@ -19,6 +19,7 @@ namespace Magazynek.Entities
         [Required] public string login { get; private set; }
         [Required] public string password { get; private set; }
         [Required] public bool active { get; private set; }
+        [Required] public DateTime created { get; private set; }
         [Required][Column("user_role")] public UserRole userRole { get; private set; }
         [Required][Column("activator_guid")] public Guid activatorGuid { get; private set; }
 
@@ -66,6 +67,7 @@ namespace Magazynek.Entities
             this.active = false;
         }
 
+        public override string ToString() => $@"{this.name}: {this.id}";
         public static async Task<Session?> GetUserSession(
             ProtectedSessionStorage sessionStorage,
             ISessionService sessionService,

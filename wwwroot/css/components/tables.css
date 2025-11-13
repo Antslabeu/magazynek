@@ -4,6 +4,9 @@ th.button-th.buttons-3 {
 th.button-th.buttons-2 {
     width: 150px;
 }
+th.button-th.buttons-1 {
+    width: 80px;
+}
 th.button-th {
     text-align: center !important;
     /* border-left: 1px solid var(--text-main); */
@@ -92,7 +95,7 @@ table th::after {
   );
 }
 tr.highlighted {
-  background: color-mix(in srgb, var(--accent-success) 10%, transparent);
+  background: color-mix(in srgb, var(--accent-success) 10%, transparent) !important;
   box-shadow: 0 0 10px color-mix(in srgb, var(--accent-success) 30%, transparent);
   transition: background var(--transition-fast), box-shadow var(--transition-fast);
 }
@@ -106,4 +109,16 @@ tr.highlighted {
 
 .text-danger {
     color: var(--accent-error) !important;
+}
+
+/* headers */
+span.table-header {
+  margin-bottom: var(--space-md);
+  display: block;
+  font-size: 1.6em;
+}
+
+.table-with-header + .table-with-header {
+    /* style tylko dla KAŻDEGO .table-with-header od drugiego w górę */
+    margin-top: 4rem;
 }

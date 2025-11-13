@@ -1,0 +1,104 @@
+@page "/system-settings"
+@namespace Magazynek.Pages
+
+
+@using System.ComponentModel.DataAnnotations
+@using Magazynek.Entities.Models
+@using Magazynek.Entities
+@using Magazynek.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Magazynek.Data
+@using Magazynek.Data.Mailer
+@using System.Threading.Tasks
+@using magazynek.Data
+
+@inject IJSRuntime JS
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+@inject NavigationManager NavigationManager
+@inject IEmailSender EmailSender
+@inject NavigationManager Nav
+
+
+
+
+<div class="container mt-4">
+    <div class="table-with-header">
+        <span class="table-header">Sesje</span>
+        <table class="table table-dark table-striped table-hover align-middle">
+            <thead class="table-dark border-bottom border-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Użytkownik</th>
+                    <th>Ostatnia akcja</th>
+                    <th class="button-th buttons-1">Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(Session s in SessionService.GetSessions())
+                {
+                    <tr class="@(activeSession?.guid == s.guid ? "highlighted" : "")">
+                        <td>@s.guid</td>
+                        <td>@s.user?.id</td>
+                        <td>@Helper.DatetimeToString(s.modifiedAt)</td>
+                        <td>
+                            <button class="btn btn-danger" @onclick="() => SessionService.Admin_DeleteSession(s)">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-with-header">
+        <span class="table-header">Użytkownicy</span>
+        <table class="table table-dark table-striped table-hover align-middle">
+            <thead class="table-dark border-bottom border-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Aktywny</th>
+                    <th class="button-th buttons-1">Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(User u in users)
+                {
+                    <tr class="@(u.id == activeSession?.user?.id ? "highlighted" : "")">
+                        <td>@u.id</td>
+                        <td>
+                            <BoolPresentation Value="@u.active"/>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger" @onclick="() => SessionService.Admin_DeleteUser(u)">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>  
+
+</div>
+
+
+
+
+@code 
+{
+    Session? activeSession;
+    List<User> users = new List<User>();
+    protected override async Task OnParametersSetAsync() {
+        users = await SessionService.GetAllUsers();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if(firstRender)
+        {
+            activeSession = await SessionService.GetOrCreateSession(SessionStorage);
+            StateHasChanged();
+        }
+    }
+}
