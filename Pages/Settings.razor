@@ -2,6 +2,7 @@
 
 @using Magazynek.Entities
 @using Magazynek.Services
+@inject IJSRuntime JS
 
 @inject ISystemSettingsService SystemSettingsService
 
@@ -71,5 +72,6 @@
             }
             await SystemSettingsService.SaveSetting(setting);
         }
+        await JS.InvokeVoidAsync("ui.toast", "Zapisano", "success");
     }
 }

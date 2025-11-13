@@ -1,0 +1,58 @@
+@using Magazynek.Services
+@using Microsoft.Build.Framework
+@using Magazynek.Entities
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+
+
+@implements IAsyncDisposable
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+@inject NavigationManager Nav
+
+@code {
+    private PeriodicTimer? timer;
+    private CancellationTokenSource? cts;
+    private readonly SemaphoreSlim mutex = new SemaphoreSlim(initialCount: 1, maxCount: 1);
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            cts = new CancellationTokenSource();
+            timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+            _ = LoopAsync();
+        }
+        return Task.CompletedTask;
+    }
+    private async Task LoopAsync()
+    {
+        try
+        {
+            while (await timer!.WaitForNextTickAsync(cts!.Token))
+            {
+                if (!await mutex.WaitAsync(0)) continue;
+                try
+                {
+                    Session session = await SessionService.GetOrCreateSession(SessionStorage);
+
+                    if (SessionService.UserShouldBeLoggedOut(session))
+                    {
+                        SessionService.LogoutUser(session);
+                        Nav.NavigateTo("/login", forceLoad: true);
+                        break;
+                    }
+                }
+                finally { mutex.Release(); }
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+    public ValueTask DisposeAsync()
+    {
+        cts?.Cancel();
+        timer?.Dispose();
+        cts?.Dispose();
+        mutex.Dispose();
+        return ValueTask.CompletedTask;
+    }
+}

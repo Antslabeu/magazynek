@@ -2,12 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using Magazynek.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using magazynek.Entities;
 
 
 namespace Magazynek.Data
 {
-    public class DatabaseContext : IdentityDbContext<AppUser>
+    public class DatabaseContext : DbContext
     {
         public required DbSet<ShippingEntry> ShippingEntries{ get; set; }
         public required DbSet<Product> Products { get; set; }
@@ -15,6 +14,7 @@ namespace Magazynek.Data
         public required DbSet<ProjectRealization> ProjectRealizations { get; set; }
         public required DbSet<ProjectItem> ProjectItems { get; set; }
         public required DbSet<SystemSetting> SystemSettings { get; set; }
+        public required DbSet<User> Users { get; set; }
 
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
@@ -40,6 +40,10 @@ namespace Magazynek.Data
 
             modelBuilder.Entity<SystemSetting>()
                 .HasIndex(s => s.Name)
+                .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .HasIndex(s => s.id)
                 .IsUnique();
                 
             base.OnModelCreating(modelBuilder);

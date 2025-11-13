@@ -130,3 +130,20 @@ button.btn-close:hover {
 body.modal-open {
   overflow: hidden;
 }
+
+
+/* login modal: */
+div.modal-content.login
+{
+  margin: auto;
+}
+div.login-table
+{
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+button.btn-login
+{
+  width: 100%;
+}

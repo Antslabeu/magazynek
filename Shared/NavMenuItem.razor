@@ -1,0 +1,24 @@
+<div class="nav-item px-3 @(ComparePathStringsAndGetActive(currentPage, linkedPage))">
+    <NavLink class="nav-link" href="@linkedPage">
+        @ChildContent
+    </NavLink>
+</div>
+
+
+@code
+{
+    [Parameter] public string currentPage { get; set; } = string.Empty;
+    [Parameter] public string linkedPage { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    string ComparePathStringsAndGetActive(string a, string b)
+    {
+        if(a.Contains("/")) a = a.Split("/")[1];
+        if(b.Contains("/")) b = b.Split("/")[1];
+
+        if( a.ToLower() == b.ToLower()) return "active";
+        return "";
+    }
+
+
+}

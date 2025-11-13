@@ -1,0 +1,21 @@
+@page "/logout"
+
+@namespace Magazynek.Pages
+
+@using Magazynek.Entities
+@using Magazynek.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+@inject NavigationManager NavigationManager
+
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Session activeSession = await SessionService.GetOrCreateSession(SessionStorage);
+        SessionService.LogoutUser(activeSession);
+        NavigationManager.NavigateTo("/");
+    }
+}

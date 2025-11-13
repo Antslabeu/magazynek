@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using magazynek.Data;
 
 namespace Magazynek.Entities;
 
@@ -43,8 +44,8 @@ public class ShippingEntry
 
 public class ShippingEntryViewModel
 {
-    public Guid id { get; set; }
-    public Product product { get; set; }
+    [EditableField("Id", IsEditable: false)] public Guid id { get; set; }
+    [EditableField("Id", IsEditable: false)] public Product product { get; set; }
     public int quantity { get; set; }
     public DateTime last_check { get; set; }
     public uint stock { get; set; }

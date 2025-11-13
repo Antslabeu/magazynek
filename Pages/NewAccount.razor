@@ -1,0 +1,110 @@
+@page "/new-account"
+@namespace Magazynek.Pages
+
+
+@using System.ComponentModel.DataAnnotations
+@using Magazynek.Entities.Models
+@using Magazynek.Entities
+@using Magazynek.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Magazynek.Data
+@using Magazynek.Data.Mailer
+
+@inject IJSRuntime JS
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+@inject NavigationManager NavigationManager
+@inject IEmailSender EmailSender
+@inject NavigationManager Nav
+
+
+
+<div class="container mt-4">
+    <div class="modal-dialog">
+        <div class="modal-content text-light bg-dark login">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Rejestracja
+                </h5>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="@accountModel" OnValidSubmit="HandleValidSubmit">
+                    <DataAnnotationsValidator />
+                    <div class="login-table">
+                        <div class="field">
+                            <div class="input-group floating no-suffix">
+                                <span class="addon" aria-hidden="true"><i class="fa-solid fa-signature"></i></span>
+                                <InputText @bind-Value="accountModel.Name"
+                                    id="name"
+                                    class="form-control login"
+                                    placeholder="imię" />
+                            </div>
+                            <ValidationMessage class="show" For="@(() => accountModel.Name)" />
+                        </div>
+                        <div class="field">
+                            <div class="input-group floating no-suffix">
+                                <span class="addon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
+                                <InputText @bind-Value="accountModel.Login"
+                                    id="email"
+                                    class="form-control login"
+                                    placeholder="e-mail" />
+                            </div>
+                            <ValidationMessage class="show" For="@(() => accountModel.Login)" />
+                        </div>
+                        <div class="field">
+                            <PasswordInput PasswordChanged="@PasswordChanged" />
+                            <ValidationMessage class="show" For="@(() => accountModel.Password)" />
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success space-top lg btn-login">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code 
+{
+    NewAccountModel accountModel = new NewAccountModel();
+
+    void PasswordChanged(string pass)
+    {
+        accountModel.Password = pass;
+    }
+    private async Task HandleValidSubmit()
+    {
+        Session activeSession = await SessionService.GetOrCreateSession(SessionStorage);
+        if(accountModel.IsEmpty) return;
+
+        Guid activatorGuid = Guid.NewGuid();
+        User newUser = new User(
+            id: Guid.NewGuid(),
+            name: accountModel.Name!,
+            login: accountModel.Login!, 
+            password: accountModel.Password!,
+            userRole: User.UserRole.User,
+            activatorGuid: activatorGuid
+        );
+
+        if(await SessionService.GetUser(newUser.login) != null)
+        {
+            accountModel.Clear();
+            await JS.InvokeVoidAsync("ui.toast", "Taki uzytkownik istnieje!", "error");
+            return;
+        }
+
+        await SessionService.AddNewUser(newUser);
+        await EmailSender.SendAsync(
+            to: newUser.login,
+            subject: "Nowe konto Magazynek",
+            htmlBody: MailBodies.BuildActivationEmailHtml(accountModel, activatorGuid, Nav)
+        );
+
+
+        await JS.InvokeVoidAsync("ui.toast", "Rejestracja ukończona! Aktywuj konto wiadomością email!", "success");
+    }
+}

@@ -1,12 +1,21 @@
-﻿@inherits LayoutComponentBase
+﻿@using Magazynek.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Magazynek.Entities
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+
+@inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
-@inject IHttpContextAccessor HttpContextAccessor
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+@inject IFlashService FlashService
+@inject IJSRuntime JS
+
 
 <PageTitle>Magazynek</PageTitle>
 
 <div class="page">
     <div class="sidebar">
-        <NavMenu />
+        <NavMenu/>
     </div>
     <div class="main">
         @Body
@@ -15,3 +24,36 @@
         © @(DateTime.Now.Year) Ants Lab. All rights reserved.
     </footer>
 </div>
+<div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+
+
+@code {
+    private string path = string.Empty;
+
+    Session? activeSession;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        activeSession = await SessionService.GetOrCreateSession(SessionStorage);
+
+        path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        path = Normalize(path);
+        if(!ISessionService.unprotectedPages.Contains(path) && activeSession.user == null) NavigationManager.NavigateTo("/login");
+        if(path == "login" && activeSession.user != null) NavigationManager.NavigateTo("/");
+
+        FlashMessage? flashMessage = await FlashService.ConsumeAsync();
+        if(flashMessage != null)
+        {
+            await JS.InvokeVoidAsync("ui.toast", flashMessage.Text, flashMessage.Type.ToString());
+        }
+    }
+
+    private static string Normalize(string relative)
+    {
+        if (string.IsNullOrEmpty(relative)) return "";
+        var core = relative.Split('?', '#')[0];
+        return core.TrimEnd('/');
+    }
+    
+}

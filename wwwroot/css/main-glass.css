@@ -10,6 +10,8 @@
 @import url('./components/modals.css');
 @import url('./components/tables.css');
 @import url('./components/containers.css');
+@import url('./components/toast.css');
+@import url('./components/alert.css');
 
 
 @import url('./components/standards.css');

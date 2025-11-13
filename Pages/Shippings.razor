@@ -1,0 +1,241 @@
+@page "/shippings"
+@using Magazynek.Entities
+@using Magazynek.Services
+@using Magazynek.Data
+
+@inject IShippingEntryService ShippingEntryService
+@inject IProductService       ProductService
+
+
+<PageTitle>Ilości</PageTitle>
+
+<div class="container mt-4">
+    <SearchBar
+        OnSearchChanged="SearchChanged"
+        SearchBarButtons=@searchBarButtons
+        ItemCount="filteredShippings?.Count() ?? 0"
+    />
+    <table class="table table-dark table-striped table-hover align-middle">
+        <thead class="table-dark border-bottom border-light">
+            <tr>
+                <th>Typ</th>
+                <th>Nazwa</th>
+                <th>Opis</th>
+                <th>Obudowa</th>
+                <th>Ilość</th>
+                @* <th>Wartość</th> *@
+                <th>TME ID</th>
+                <th>Dostępność</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(filteredShippings != null)
+            {
+                @foreach (ShippingEntryViewModel shippingEntry in filteredShippings)
+                {
+                    bool qtyZero = shippingEntry.quantity == 0;
+                    bool stockZero = shippingEntry.stock == 0;
+                    <tr>
+                        <td class="@(stockZero || qtyZero? "text-danger":"")">@shippingEntry.product.type</td>
+                        <td>@shippingEntry.product.name</td>
+                        <td>@shippingEntry.product.description</td>
+                        <td>@shippingEntry.product.package</td>
+                        <td class="@(qtyZero? "text-danger":"")">@shippingEntry.quantity</td>
+                        @* <td>@shippingEntry.stockValue.ToString("0.00")</td> *@
+                        <td>@shippingEntry.product.tmeID</td>
+                        <td class="@(stockZero? "text-danger":"")">@shippingEntry.stock</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+    @* <EditModal
+        Title="Dodaj dostawę"
+        Model="editingProduct"
+        OnSubmit="@SaveProduct"
+        OnModalClose="@CloseEditModal"
+        DropdownOptions="@dropdowns"
+        @ref="ModalRef"
+    /> *@
+
+    @if (editingEntry != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content text-light bg-dark">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Dodaj dostawę</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CloseAddModal"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        @* <EditForm Model="editingEntry" OnValidSubmit="SaveEntry">
+                            <label class="form-label">Wybierz produkt</label>
+                            <InputText class="form-control mb-2" placeholder="Szukaj..." 
+                                @bind-Value="productSearch" 
+                                @oninput="e => { productSearch = e.Value?.ToString() ?? string.Empty; FilterProducts(); }" 
+                            />
+                            <select class="form-select" @onchange="OnProductSelected">
+                                @foreach (var product in filteredProducts)
+                                {
+                                    <option value="@product.id">@product.name</option>
+                                }
+                            </select>
+                            <div class="mb-3">
+                                <label class="form-label">Ilość</label>
+                                <InputNumber class="form-control" @bind-Value="editingEntry.quantity" min="0" step="1" />
+                            </div>
+                            <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i></button>
+                        </EditForm> *@
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (isLoading)
+    {
+         <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content text-light bg-dark">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Pobieranie danych...</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="progress" role="progressbar" aria-label="Success striped example" aria-valuenow="@currentRefreshingIndex" aria-valuemin="0" aria-valuemax="@shippingEntries.Count">
+                            <div class="progress-bar progress-bar-striped bg-success progress-bar-animated" style="width: @currentRefreshingIndex%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+
+@code {
+    private string searchTerm = string.Empty;
+    List<SearchBar.SearchBarButtonItem>? searchBarButtons;
+
+    private List<ShippingEntryViewModel> shippingEntries = new List<ShippingEntryViewModel>();
+    private ShippingEntryViewModel? editingEntry = null;
+
+    private List<Product> allProducts = new List<Product>();
+    private List<Product> filteredProducts = new List<Product>();
+
+    private bool isLoading = false;
+    private int currentRefreshingIndex = 1;
+
+    private IEnumerable<ShippingEntryViewModel>? filteredShippings;
+
+    private void SearchChanged(string query) {
+        searchTerm = query;
+        filteredShippings = shippingEntries
+             .Where(e => string.IsNullOrWhiteSpace(query) ||
+                    e.product.name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    e.product.package.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    e.product.farnellID.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    e.product.tmeID.Contains(query, StringComparison.OrdinalIgnoreCase));
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        allProducts = await ProductService.Get();
+        shippingEntries = (await ShippingEntryService.GetModels()).OrderBy(se => se.product.name).ToList();
+
+        foreach(Product p in allProducts)
+        {
+            ShippingEntryViewModel? entry = shippingEntries.FirstOrDefault(se => se.product.id == p.id);
+
+            if(p.tmeID != null && entry == null)
+            {
+                ShippingEntryViewModel newEmptyEntry = ShippingEntryViewModel.Empty();
+                newEmptyEntry.product = p;
+
+                entry = await ShippingEntryService.UpdateInfoOrInsertNew(newEmptyEntry);
+                shippingEntries.Add(entry);
+            }
+        }
+
+        searchBarButtons = new List<SearchBar.SearchBarButtonItem> {
+            new SearchBar.SearchBarButtonItem {
+                Class = "btn-success",
+                Icon = "fa-solid fa-plus",
+                OnClick = EventCallback.Factory.Create(this, AddNew)
+            },
+            new SearchBar.SearchBarButtonItem {
+                Class = "btn-light",
+                Icon = "fa-solid fa-rotate-right",
+                OnClick = EventCallback.Factory.Create(this, RefreshValues)
+            }
+        };
+
+        SearchChanged(searchTerm);
+    }
+
+    private void AddNew() => editingEntry = ShippingEntryViewModel.Empty();
+    private void CloseAddModal() => editingEntry = null;
+    private async void SaveEntry(EditContext context)
+    {
+        if(editingEntry == null) return;
+
+        if(editingEntry.product.id == Guid.Empty && filteredProducts.Count > 0)
+            editingEntry.product = filteredProducts[0];
+
+        ShippingEntryViewModel newEntry = await ShippingEntryService.UpdateInfoOrInsertNew(editingEntry);
+        if(shippingEntries.Any(x=>x.id == newEntry.id))
+        {
+            var index = shippingEntries.FindIndex(x => x.id == newEntry.id);
+            shippingEntries[index] = newEntry;
+        } 
+        else shippingEntries.Add(newEntry);
+        editingEntry = null;
+
+        shippingEntries = (await ShippingEntryService.GetModels()).OrderBy(se => se.product.name).ToList();
+        
+        StateHasChanged();
+    }
+    private async Task RefreshValues()
+    {
+        isLoading = true;
+        currentRefreshingIndex = 0;
+        StateHasChanged();
+
+        int maxConcurrency = 5;
+        using SemaphoreSlim semaphore = new SemaphoreSlim(maxConcurrency);
+        object lockObj = new object();
+
+        IEnumerable<Task<ShippingEntryViewModel>>? tasks = shippingEntries.Select(async entry =>
+        {
+            await semaphore.WaitAsync();
+            try
+            {
+                ShippingEntryViewModel updated = await ShippingEntryService.RefreshValue(entry);
+
+                lock (lockObj) currentRefreshingIndex++;
+
+                await InvokeAsync(StateHasChanged);
+                return updated;
+            }
+            finally { semaphore.Release(); }
+        });
+
+        ShippingEntryViewModel[]? results = await Task.WhenAll(tasks);
+
+        for (int i = 0; i < results.Length; i++) shippingEntries[i] = results[i];
+
+        isLoading = false;
+        StateHasChanged();
+    }
+    private void OnProductSelected(ChangeEventArgs e)
+    {
+        if(editingEntry == null) return;
+
+        var selectedId = Guid.Parse(e.Value?.ToString() ?? Guid.Empty.ToString());
+        var selectedProduct = allProducts.FirstOrDefault(p => p.id == selectedId);
+
+        if (selectedProduct != null) editingEntry.product = selectedProduct;
+    }
+
+}

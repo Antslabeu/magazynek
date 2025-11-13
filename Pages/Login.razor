@@ -1,0 +1,171 @@
+@page "/login"
+@namespace Magazynek.Pages
+
+
+@using System.ComponentModel.DataAnnotations
+@using Magazynek.Entities.Models
+@using Magazynek.Entities
+@using Magazynek.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+@using Magazynek.Data.Mailer
+
+
+@inject IJSRuntime JS
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+@inject NavigationManager NavigationManager
+@inject IEmailSender EmailSender
+@inject NavigationManager Nav
+
+
+<div class="container mt-4">
+    <div class="modal-dialog">
+        <div class="modal-content text-light bg-dark login">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Zaloguj
+                </h5>
+            </div>
+            <div class="modal-body">
+                @if(disablePasswordInput)
+                {
+                    <EditForm Model="@revertPasswordModel" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        <div class="login-table">
+                            <div class="field">
+                                <div class="input-group floating no-suffix">
+                                    <span class="addon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
+                                    <InputText @bind-Value="revertPasswordModel.mail"
+                                        id="email"
+                                        class="form-control login"
+                                        placeholder=" "
+                                        autocomplete="username" />
+                                </div>
+                                <ValidationMessage class="show" For="@(() => revertPasswordModel.mail)" />
+                            </div>
+                            
+                            <div class="field">
+                                <div class="input-group floating no-suffix">
+                                    <span class="addon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+                                    <InputText @bind-Value="revertPasswordModel.password"
+                                        disabled="true"
+                                        id="password"
+                                        class="form-control login"
+                                        placeholder=" "
+                                        type="password"
+                                        autocomplete="password" />
+                                </div>
+                                <ValidationMessage For="@(() => revertPasswordModel.password)" />
+                            </div>
+                            <button type="submit" class="btn btn-success space-top lg btn-login" >
+                                <i class="fa-solid fa-envelope"></i> Wyślij
+                            </button>
+                        </div>
+                    </EditForm>
+                }
+                else 
+                {
+                    <EditForm Model="@loginModel" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        <div class="login-table">
+                            <div class="field">
+                                <div class="input-group floating no-suffix">
+                                    <span class="addon" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
+                                    <InputText @bind-Value="loginModel.mail"
+                                        id="email"
+                                        class="form-control login"
+                                        placeholder=" "
+                                        autocomplete="username" />
+                                </div>
+                                <ValidationMessage class="show" For="@(() => loginModel.mail)" />
+                            </div>
+                            
+                            <div class="field">
+                                <div class="input-group floating no-suffix">
+                                    <span class="addon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+                                    <InputText @bind-Value="loginModel.password"
+                                        id="password"
+                                        class="form-control login"
+                                        placeholder=" "
+                                        type="password"
+                                        autocomplete="password" />
+                                </div>
+                                <ValidationMessage For="@(() => loginModel.password)" />
+                            </div>
+                            <button type="submit" class="btn btn-success space-top lg btn-login" >
+                                <i class="fa-solid fa-right-to-bracket"></i>
+                            </button>
+                        </div>
+                    </EditForm>
+                }
+
+                <button @onclick="RevertPasswordEnable" class="btn btn-primary space-top lg btn-login" disabled="@disablePasswordInput">
+                    <i class="fa-solid fa-unlock"></i> Resetuj hasło
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@code 
+{
+    LoginModel loginModel = new LoginModel();
+    RevertPasswordModel revertPasswordModel = new RevertPasswordModel();
+    
+    private bool disablePasswordInput = false;
+
+    private async Task HandleValidSubmit()
+    {
+        if(!disablePasswordInput) await TryLoginUser();
+        else await TrySendRevertPassword();
+    }
+    private void RevertPasswordEnable() {
+        disablePasswordInput = true;
+        loginModel.Clear();
+    }
+
+    private async Task TryLoginUser()
+    {
+        Session activeSession = await SessionService.GetOrCreateSession(SessionStorage);
+        if(loginModel.IsEmpty) return;
+
+        if(await SessionService.LoginUser(activeSession, loginModel.mail!, loginModel.password!))
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else 
+        {
+            loginModel.Clear();
+            await JS.InvokeVoidAsync("ui.toast", "Bład logowania!", "error");
+        }
+    }
+    private async Task TrySendRevertPassword() {
+        if(!IsValidMail(revertPasswordModel.mail))
+        {
+            await JS.InvokeVoidAsync("ui.toast", "Wpisz poprawny adres mail!", "error");
+            revertPasswordModel.Clear();
+            return;
+        }
+
+        User? foundUser = await SessionService.GetUser(revertPasswordModel.mail!);
+        if(foundUser != null)
+        {
+            foundUser = await SessionService.DeactivateUser(foundUser);
+            await EmailSender.SendAsync(
+                to: foundUser.login,
+                subject: "Reset hasła Magazynek",
+                htmlBody: MailBodies.BuildRevertPasswordHtml(foundUser.name, foundUser.login, foundUser.activatorGuid, Nav)
+            );
+        }
+
+        revertPasswordModel.Clear();
+        await JS.InvokeVoidAsync("ui.toast", "Jeśli konto isnieje, dostaniesz wiadomość!", "success");
+    }
+    private bool IsValidMail(string? mail)
+    {
+        if(mail == null) return false;
+        return mail.Contains('.') && mail.Contains('@') && mail.Length >= 6;
+    }
+}

@@ -9,6 +9,10 @@ input.form-control {
     transition: all 0.25s ease;
     box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.05);
 }
+input.form-control:disabled:hover {
+  background: var(--bg-card);
+  border-color: rgba(255, 255, 255, 0.15);
+}
 input.form-control:focus {
     outline: none;
     border-color: var(--accent-primary);
@@ -110,4 +114,44 @@ select.form-control option {
 }
 .cb:hover { 
     background: var(--glass-hover-bg);
+}
+
+
+
+div.input-group {
+    display: flex;
+    gap: var(--space-md);
+}
+input.login {
+    flex-grow: 1;
+}
+span.addon {
+    display: inline-flex;
+    align-items: center;
+}
+.validation-message {
+    color: var(--accent-error);
+    padding: 8px 36px;
+    overflow: hidden;
+    transition:
+        opacity .22s ease,
+        transform .22s ease,
+        max-height .26s ease,
+        margin-top .26s ease,
+        filter .22s ease;
+    will-change: opacity, transform, max-height, filter;
+    --vm-max: 120px;
+}
+div.password-strength {
+    width: 20px;
+    border-radius: 10px;
+}
+div.password-strength.Bad {
+    background-color: var(--accent-error);
+}
+div.password-strength.Enough {
+    background-color: var(--accent-secondary);
+}
+div.password-strength.Good {
+    background-color: var(--accent-success);
 }

@@ -1,11 +1,10 @@
 
-
-using System.Threading.Tasks;
 using Magazynek.Data;
 using Magazynek.Entities;
 using Magazynek.Services;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.EntityFrameworkCore;
+using Magazynek.Data.Mailer;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,20 +32,16 @@ builder.Services.AddDbContextFactory<DatabaseContext>(options =>
 });
 
 
-
-builder.Services.AddIdentity<magazynek.Entities.AppUser, IdentityRole>()
-    .AddEntityFrameworkStores<DatabaseContext>()
-    .AddDefaultTokenProviders();
-
-
-builder.Services.AddAuthentication();
-builder.Services.AddAuthorization();
+builder.Services.AddScoped<IFlashService,              FlashService>();
 builder.Services.AddScoped<ISystemSettingsService,     SystemSettingsService>();
 builder.Services.AddScoped<ITmeService,                TmeService>();
 builder.Services.AddScoped<IProductService,            ProductService>();
 builder.Services.AddScoped<IShippingEntryService,      ShippingEntryService>();
 builder.Services.AddScoped<IProjectService,            ProjectService>();
 builder.Services.AddScoped<IProjectReservationService, ProjectReservationService>();
+
+builder.Services.AddSingleton<ISessionService, SessionService>();
+builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
 
 var app = builder.Build();
 
@@ -71,36 +66,34 @@ app.MapFallbackToPage("/_Host");
 await DoStartupThingsOnApp(app);
 await SeedRolesAndAdminAsync(app.Services);
 
-
 app.Run();
 
 static async Task SeedRolesAndAdminAsync(IServiceProvider services)
 {
     using var scope = services.CreateScope();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<magazynek.Entities.AppUser>>();
-
-    // Dodaj role, jeśli nie istnieją
-    List<string> roleNames = [.. Enum.GetNames(typeof(magazynek.Entities.AppUser.UserType))];
-    foreach (var roleName in roleNames)
-        if (!await roleManager.RoleExistsAsync(roleName)) await roleManager.CreateAsync(new IdentityRole(roleName));
-
+    var sessionService = scope.ServiceProvider.GetRequiredService<ISessionService>();
 
     // Utwórz admina, jeśli nie istnieje
-    var adminEmail = "admin_magazynek@antslab.eu";
+    var adminLogin = "admin_magazynek@antslab.eu";
     var adminPassword = "Admin123!";
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    var adminName = "System admin";
+
+    User? adminUser = await sessionService.GetUser(User.UserRole.Admin);
+
     if (adminUser == null)
     {
-        adminUser = new magazynek.Entities.AppUser
-        {
-            UserName = adminEmail,
-            Email = adminEmail,
-            userType = magazynek.Entities.AppUser.UserType.Admin
-        };
-        await userManager.CreateAsync(adminUser, adminPassword);
-        await userManager.AddToRoleAsync(adminUser, magazynek.Entities.AppUser.UserType.Admin.ToString());
-        Console.WriteLine($"Admin user created with email: {adminEmail}");
+        Guid activatorGuid = Guid.NewGuid();
+        adminUser = new User(
+            id: Guid.NewGuid(),
+            name: adminName,
+            login: adminLogin,
+            password: adminPassword,
+            userRole: User.UserRole.Admin,
+            activatorGuid: activatorGuid
+        );
+        adminUser.SetActive(activatorGuid);
+        await sessionService.AddNewUser(adminUser);
+        Console.WriteLine($"Admin user created with login: {adminUser.login}");
         Console.WriteLine($"Default password: {adminPassword}");
     }
 }

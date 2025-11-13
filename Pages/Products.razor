@@ -3,6 +3,7 @@
 @using Magazynek.Entities
 @using Magazynek.Services
 
+@inject IJSRuntime JS
 @inject IProductService ProductService
 @inject ISystemSettingsService SystemSettingsService
 
@@ -33,7 +34,7 @@
             {
                 @foreach (Product product in filteredProducts)
                 {
-                    <tr>
+                    <tr class="@(product.id == seletedProduct?.id ? "highlighted" : "")">
                         <td>@product.type</td>
                         <td>@product.name</td>
                         <td><BoolPresentation Value="product.active" /></td>
@@ -76,6 +77,7 @@
     private ProductViewModel? editingProduct = null;
     private bool editingProductIsNew = false;
     private List<Product> products = new List<Product>();
+    private Product? seletedProduct = null;
 
     private List<SystemSetting> settings = new List<SystemSetting>();
     List<string> productTypes = new List<string>();
@@ -120,6 +122,16 @@
         ModalRef?.Show();
     }
     private async void Remove(Product p) {
+        seletedProduct = p;
+        StateHasChanged();
+        var ok = await JS.InvokeAsync<bool>(
+            "ui.confirm", 
+            "Usunąć rekord?", "Tej operacji nie można cofnąć."
+        );
+        seletedProduct = null;
+        StateHasChanged();
+        if(!ok) return;
+
         await ProductService.Remove(p);
         products.Remove(p);
         StateHasChanged();

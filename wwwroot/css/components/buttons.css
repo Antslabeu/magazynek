@@ -47,6 +47,16 @@ button.btn-primary:hover {
     0 0 16px color-mix(in srgb, var(--accent-primary) 35%, transparent),
     inset 0 0 12px color-mix(in srgb, var(--accent-primary) 15%, transparent);
 }
+button.btn-primary:disabled {
+  border-color: var(--accent-primary-dark);
+  background:  color-mix(in srgb, var(--accent-primary-dark) 15%, transparent);
+  cursor: default;
+  color: var(--text-muted);
+}
+button.btn-primary:disabled:hover {
+  background:  color-mix(in srgb, var(--accent-primary-dark) 15%, transparent);
+  box-shadow: none;
+}
 
 /* Success */
 button.btn-success {
@@ -59,6 +69,16 @@ button.btn-success:hover {
     0 0 16px color-mix(in srgb, var(--accent-success) 35%, transparent),
     inset 0 0 12px color-mix(in srgb, var(--accent-success) 15%, transparent);
 }
+button.btn-success:disabled {
+  border-color: var(--accent-success-dark);
+  background:  color-mix(in srgb, var(--accent-success-dark) 15%, transparent);
+  cursor: default;
+  color: var(--text-muted);
+}
+button.btn-success:disabled:hover {
+  background:  color-mix(in srgb, var(--accent-success-dark) 15%, transparent);
+  box-shadow: none;
+}
 
 /* Danger */
 button.btn-danger {
@@ -70,6 +90,16 @@ button.btn-danger:hover {
   box-shadow:
     0 0 16px color-mix(in srgb, var(--accent-error) 35%, transparent),
     inset 0 0 12px color-mix(in srgb, var(--accent-error) 15%, transparent);
+}
+button.btn-danger:disabled {
+  border-color: var(--accent-danger-dark);
+  background:  color-mix(in srgb, var(--accent-danger-dark) 15%, transparent);
+  cursor: default;
+  color: var(--text-muted);
+}
+button.btn-danger:disabled:hover {
+  background:  color-mix(in srgb, var(--accent-danger-dark) 15%, transparent);
+  box-shadow: none;
 }
 
 /* Optional compact icon button */

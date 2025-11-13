@@ -34,8 +34,9 @@
 }
 
 .invalid {
-    outline: 1px solid red;
+    box-shadow: inset 0 0 0 2px var(--accent-error-dark) !important;
 }
+
 .w-100 {
     width: 100%;
 }

@@ -1,0 +1,52 @@
+@page "/new-account/activate"
+@namespace Magazynek.Pages
+
+@using Magazynek.Entities
+@using Magazynek.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Magazynek.Data
+@using Magazynek.Data.Mailer
+
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+@inject NavigationManager NavigationManager
+@inject IEmailSender EmailSender
+@inject NavigationManager Nav
+@inject IFlashService FlashService
+
+
+@code {
+    [SupplyParameterFromQuery] public string? code  { get; set; }
+    [SupplyParameterFromQuery] public string? login { get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Guid activatorGuid = Guid.Empty;
+        if (
+            string.IsNullOrWhiteSpace(code) || 
+            string.IsNullOrWhiteSpace(login) || 
+            !Guid.TryParse(code, out activatorGuid)
+        )
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        User? userByLogin = await SessionService.GetUser(login);
+        if(userByLogin == null || userByLogin.active)
+        {
+            await FlashService.SetAsync(new FlashMessage("Konto nie istnieje lub już aktywne!", FlashMessageType.error));
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        if(await SessionService.TryActivateUser(activatorGuid, userByLogin)) 
+        {
+            await FlashService.SetAsync(new FlashMessage("Konto aktywowane!\nZaloguj się", FlashMessageType.success));
+            NavigationManager.NavigateTo("/login");
+        }
+        else NavigationManager.NavigateTo("/");
+
+    }
+}
