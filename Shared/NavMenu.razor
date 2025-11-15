@@ -35,9 +35,13 @@
         {
             <div class="greeter">
                 <span class="greeter">
-
+                    @GreetUser()
                 </span>
             </div>
+
+            <NavMenuItem currentPage="@path" linkedPage="/">
+                <i class="fa-solid fa-house-chimney"></i> O projekcie
+            </NavMenuItem>
 
             <div class="menu-spacer"></div>
 
@@ -58,12 +62,6 @@
 
             <NavMenuItem currentPage="@path" linkedPage="/settings">
                 <i class="fa-solid fa-user-gear"></i> Ustawienia konta
-            </NavMenuItem>
-
-            <div class="menu-spacer"></div>
-
-            <NavMenuItem currentPage="@path" linkedPage="/">
-                <i class="fa-solid fa-house-chimney"></i> O projekcie
             </NavMenuItem>
 
             <div class="menu-spacer"></div>
@@ -93,6 +91,21 @@
     {
         Nav.LocationChanged += OnLocationChanged;
     }
+    string GreetUser()
+    {
+        if(activeSession == null || activeSession.user == null) return "";
+        int hour = DateTime.Now.Hour;
+
+        string greeting = hour switch
+        {
+            >= 5 and < 12 => "Dzień dobry",
+            >= 12 and < 18 => "Dobry dzień",
+            _ => "Dobry wieczór"
+        };
+
+        return $"{greeting}, {activeSession.user.name}";
+    }
+
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         _ = InvokeAsync(async () =>

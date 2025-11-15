@@ -1,0 +1,33 @@
+name: Build Magazynek
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  APP_VERSION_BASE: "0.0.0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Set version
+        run: |
+          BUILD_NUMBER=${{ github.run_number }}
+          BUILD_DATE=$(date -u +%Y-%m-%d)
+          echo "APP_VERSION=${APP_VERSION_BASE}.${BUILD_NUMBER}" >> $GITHUB_ENV
+          echo "APP_VERSION_INFO=${APP_VERSION_BASE}.${BUILD_NUMBER} (${BUILD_DATE})" >> $GITHUB_ENV
+
+      - name: Build
+        run: dotnet build src/Magazynek/Magazynek.csproj -c Release \
+               /p:Version=$APP_VERSION \
+               /p:FileVersion=$APP_VERSION \
+               /p:InformationalVersion="$APP_VERSION_INFO"

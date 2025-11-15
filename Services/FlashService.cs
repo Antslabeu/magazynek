@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
+namespace Magazynek.Services;
 public record FlashMessage(string Text, FlashMessageType Type);
 public enum FlashMessageType
 {

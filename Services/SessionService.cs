@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Magazynek.Data;
 using Magazynek.Entities;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using System.Configuration;
 
 namespace Magazynek.Services
 {
@@ -34,8 +35,10 @@ namespace Magazynek.Services
 
         Task AddNewUser(User user);
         Task<bool> TryActivateUser(Guid activateGuid, User user);
+        Task PrepareUserTables(User user);
         Task<User> DeactivateUser(User user);
         Task UpdatePassword(User user, string password);
+        Task<User?> GetLoggedUser(ProtectedSessionStorage sessionStorage);
 
         List<Session> GetSessions();
         Task<List<User>> GetAllUsers();
@@ -48,11 +51,13 @@ namespace Magazynek.Services
     {
         private List<Session> sessions;
         private readonly IServiceProvider serviceProvider;
+        private readonly INeededSetting neededSetting;
 
-        public SessionService(IServiceProvider serviceProvider)
+        public SessionService(IServiceProvider serviceProvider, INeededSetting neededSetting)
         {
             sessions = new List<Session>();
             this.serviceProvider = serviceProvider;
+            this.neededSetting = neededSetting;
         }
 
         public async Task<Session> GetOrCreateSession(ProtectedSessionStorage sessionStorage)
@@ -146,6 +151,26 @@ namespace Magazynek.Services
             await database.SaveChangesAsync();
             return true;
         }
+        public async Task PrepareUserTables(User user)
+        {
+            using var scope = serviceProvider.CreateScope();
+            var database = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+
+            // settings:
+            List<NeededSettingObject> systemSettings = neededSetting.GetNeddedSettings();
+            foreach(NeededSettingObject neededSetting in systemSettings)
+            {
+                database.SystemSettings.Add(new SystemSetting(
+                    name: neededSetting.Name, 
+                    type: (SystemSetting.SettingType)neededSetting.Type,
+                    Value: "", 
+                    sName: (SystemSetting.SettingName)neededSetting.SName,
+                    userID: user.id
+                ));
+            }
+            await database.SaveChangesAsync();
+
+        }
         public async Task<User> DeactivateUser(User user)
         {
             using var scope = serviceProvider.CreateScope();
@@ -170,7 +195,16 @@ namespace Magazynek.Services
             dbUser.SetActive(dbUser.activatorGuid);
             await database.SaveChangesAsync();
         }
+        public async Task<User?> GetLoggedUser(ProtectedSessionStorage sessionStorage)
+        {
+            ProtectedBrowserStorageResult<Guid> result = await sessionStorage.GetAsync<Guid>(ISessionService.sessionGuidKey);
+            if (!result.Success || result.Value == Guid.Empty) return null;
 
+            Session? session = sessions.FirstOrDefault(s => s.guid == result.Value);
+            if(session == null) return null;
+
+            return session.user;
+        }
         public List<Session> GetSessions() => sessions;
 
         public void Admin_DeleteSession(Session s)
@@ -185,7 +219,11 @@ namespace Magazynek.Services
         }
         public async Task Admin_DeleteUser(User user)
         {
-            
+            using var scope = serviceProvider.CreateScope();
+            var database = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+
+            database.Users.Remove(user);
+            await database.SaveChangesAsync();
         }
     }
 }

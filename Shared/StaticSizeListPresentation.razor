@@ -1,0 +1,58 @@
+@using System.ComponentModel.DataAnnotations
+
+<style>
+    div.static-row-items {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        column-gap: 1.5rem;
+    }
+    div.static-row {
+        width: 100%;
+    }
+    input.form-control.bg-dark.text-light {
+        width: 100%;
+    }
+</style>
+
+<div class="container text-center no-margin-padding">
+    <div class="static-row-items">
+        @for(int i = 0; i < LocalItems?.Length; i++)
+        {
+            int index = i;
+            <div class="static-row">
+                <input class="form-control bg-dark text-light"
+                    value="@LocalItems[index]"
+                    @oninput="(e => OnInputChanged(index, e))" />
+            </div>
+        }
+    </div>
+</div>
+
+
+
+
+@code {
+    [Parameter] [Required] public List<string> Items { get; set; } = new ();
+
+    private string[]? LocalItems { get; set; }
+
+    public string[] GetItems() => LocalItems!;
+    bool initialized = false;
+
+    protected override void OnParametersSet()
+    {
+        if(!initialized)
+        {
+            initialized = true;
+            LocalItems = new string[Items.Count];
+            for(int i = 0; i < Items.Count(); i++) LocalItems[i] = Items[i];
+        }
+    }
+    private void OnInputChanged(int index, ChangeEventArgs e)
+    {
+        if (LocalItems == null || index < 0 || index >= LocalItems?.Length) return;
+        LocalItems![index] = e.Value?.ToString() ?? string.Empty;
+    }
+
+}

@@ -12,19 +12,25 @@ namespace Magazynek.Entities
         public enum SettingName
         {
             TME_API_token,
-            Typy_produktów
+            Typy_produktów,
+            NameTableProduct,
         };
-
-        private static readonly string ARRAY_SEPARATOR = "%()%";
         public enum SettingType
         {
             STRING,
             INT,
             BOOL,
             FLOAT,
-            ARRAY
+            ARRAY,
+            ARRAY_STATIC_SIZE_6
         }
-        [Key] [Column("name")] public string Name { get; set; } = string.Empty;
+
+
+        private static readonly string ARRAY_SEPARATOR = "%()%";
+        
+        [Key] public Guid id { get; set; }
+        [Required] [Column("name")] public string Name { get; set; } = string.Empty;
+        [Required] [Column("userid")] public Guid userID { get; set; }
         [Required] [Column("type")] public SettingType Type { get; set; } = SettingType.STRING;
         [Required] [Column("value")] public string Value { get; set; } = string.Empty;
         [Required] [Column("settingname")] public SettingName SName { get; set; }
@@ -63,11 +69,13 @@ namespace Magazynek.Entities
 
         protected SystemSetting() { }
 
-        public SystemSetting(string name, SettingType type, string Value)
+        public SystemSetting(string name, SettingType type, string Value, SettingName sName, Guid userID)
         {
             this.Name = name;
             this.Type = type;
             this.Value = Value;
+            this.SName = sName;
+            this.userID = userID;
         }
     }
 

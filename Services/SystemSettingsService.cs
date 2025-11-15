@@ -8,11 +8,9 @@ namespace Magazynek.Services
 {
     public interface ISystemSettingsService
     {
-        Task<List<SystemSetting>> GetSettings();
+        Task<List<SystemSetting>> GetSettings(User user);
         Task<T> GetSetting<T>(string name);
         Task SaveSetting(SystemSetting systemSetting, bool saveChangesAsync = true);
-
-        Task InitSettings();
     }
 
 
@@ -30,10 +28,10 @@ namespace Magazynek.Services
             this.configuration = configuration;
         }
 
-        public async Task<List<SystemSetting>> GetSettings()
+        public async Task<List<SystemSetting>> GetSettings(User user)
         {
             await using var database = await dbContextFactory.CreateDbContextAsync();
-            List<SystemSetting> settings = await database.SystemSettings.ToListAsync();
+            List<SystemSetting> settings = await database.SystemSettings.Where(s => s.userID == user.id).ToListAsync();
 
             foreach (SystemSetting setting in settings)
             {
@@ -77,20 +75,6 @@ namespace Magazynek.Services
             else await database.SystemSettings.AddAsync(systemSetting);
 
             if (saveChangesAsync) await database.SaveChangesAsync();
-        }
-
-        public async Task InitSettings()
-        {
-            var settings = configuration.GetSection("NeddedSettings").Get<List<SystemSetting>>();
-            if(settings == null || settings.Count == 0) return;
-
-            await using var db = await dbContextFactory.CreateDbContextAsync();
-            foreach (var s in settings)
-            {
-                if (!db.SystemSettings.Any(x => x.Name == s.Name))
-                    db.SystemSettings.Add(new SystemSetting(s.Name, s.Type, protector.Protect(string.Empty)));
-            }
-            await db.SaveChangesAsync();
         }
     }
 }

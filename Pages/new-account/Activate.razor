@@ -11,7 +11,6 @@
 @inject ProtectedSessionStorage SessionStorage
 @inject NavigationManager NavigationManager
 @inject IEmailSender EmailSender
-@inject NavigationManager Nav
 @inject IFlashService FlashService
 
 
@@ -43,6 +42,8 @@
 
         if(await SessionService.TryActivateUser(activatorGuid, userByLogin)) 
         {
+            await SessionService.PrepareUserTables(userByLogin);
+            
             await FlashService.SetAsync(new FlashMessage("Konto aktywowane!\nZaloguj się", FlashMessageType.success));
             NavigationManager.NavigateTo("/login");
         }

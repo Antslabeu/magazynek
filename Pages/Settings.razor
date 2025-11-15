@@ -2,9 +2,15 @@
 
 @using Magazynek.Entities
 @using Magazynek.Services
-@inject IJSRuntime JS
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
+
+@inject IJSRuntime JS
 @inject ISystemSettingsService SystemSettingsService
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+@inject NavigationManager NavigationManager
+
 
 <PageTitle>Ustawienia</PageTitle>
 
@@ -12,7 +18,7 @@
     <table class="table table-dark table-striped table-hover align-middle">
         <thead class="table-dark border-bottom border-light">
             <tr>
-                <th style="width:250px;">Nazwa</th>
+                <th>Nazwa</th>
                 <th>Parametr</th>
             </tr>
         </thead>
@@ -38,7 +44,14 @@
                                 <InputCheckbox class="form-control bg-dark text-light" @bind-Value="settings[index].B_Value" />
                                 break;
                             case SystemSetting.SettingType.ARRAY:
-                                <EditableListPresentation @ref="editableListRef" Items="settings[index].A_Value"/>
+                                <EditableListPresentation 
+                                    @ref="editableListRef[settings[index].id]"
+                                    Items="settings[index].A_Value" />
+                                break;
+                            case SystemSetting.SettingType.ARRAY_STATIC_SIZE_6:
+                                <StaticSizeListPresentation 
+                                    @ref="staticSizeLists[settings[index].id]"
+                                    Items="settings[index].A_Value" />
                                 break;
                         }
                     </td>
@@ -52,24 +65,54 @@
 
 @code {
     private List<SystemSetting> settings = new List<SystemSetting>();
-    private EditableListPresentation? editableListRef;
+
+
+    private Dictionary<Guid, EditableListPresentation?> editableListRef = new ();
+
+    private Dictionary<Guid, StaticSizeListPresentation?> staticSizeLists = new ();
 
 
 
-    protected override async Task OnParametersSetAsync()
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        settings = await SystemSettingsService.GetSettings();
-        settings.Sort((SystemSetting a, SystemSetting b) => a.SName.CompareTo(b.SName));
+        await base.OnAfterRenderAsync(firstRender);
+
+        if(firstRender)
+        {
+            User? loggedUser = await SessionService.GetLoggedUser(SessionStorage);
+            if(loggedUser == null) return;
+
+            settings = await SystemSettingsService.GetSettings(loggedUser);
+            settings.Sort((SystemSetting a, SystemSetting b) => a.SName.CompareTo(b.SName));
+
+            foreach (SystemSetting s in settings)
+            {
+                if(s.Type == SystemSetting.SettingType.ARRAY && !editableListRef.ContainsKey(s.id)) 
+                    editableListRef.Add(s.id, null);
+                if(s.Type == SystemSetting.SettingType.ARRAY_STATIC_SIZE_6 && !staticSizeLists.ContainsKey(s.id))
+                    staticSizeLists.Add(s.id, null);
+            }
+
+            StateHasChanged();
+        }
     }
 
     private async Task SaveSettings()
     {
         foreach (SystemSetting setting in settings)
         {
-            if(setting.Type == SystemSetting.SettingType.ARRAY && editableListRef != null)
+            if(setting.Type == SystemSetting.SettingType.ARRAY)
             {
-                setting.A_Value = editableListRef.GetItems();
+                if (editableListRef.TryGetValue(setting.id, out var comp) && comp is not null)
+                setting.A_Value = comp.GetItems();
             }
+            if(setting.Type == SystemSetting.SettingType.ARRAY_STATIC_SIZE_6)
+            {
+                if (staticSizeLists.TryGetValue(setting.id, out var comp) && comp is not null)
+                setting.A_Value = comp.GetItems().ToList();
+            }
+
             await SystemSettingsService.SaveSetting(setting);
         }
         await JS.InvokeVoidAsync("ui.toast", "Zapisano", "success");

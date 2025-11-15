@@ -135,3 +135,12 @@ body {
     padding-left: 0;
   }
 }
+
+div.greeter
+{
+  font-size: 1.1em;
+  margin-bottom: var(--space-lg);
+  padding-left: var(--space-lg);
+  margin-top: var(--space-sm);
+  display: block;
+}

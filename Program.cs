@@ -5,6 +5,7 @@ using Magazynek.Services;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.EntityFrameworkCore;
 using Magazynek.Data.Mailer;
+using magazynek.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,8 +41,10 @@ builder.Services.AddScoped<IShippingEntryService,      ShippingEntryService>();
 builder.Services.AddScoped<IProjectService,            ProjectService>();
 builder.Services.AddScoped<IProjectReservationService, ProjectReservationService>();
 
+
+builder.Services.AddSingleton<INeededSetting,  NeededSetting>();
 builder.Services.AddSingleton<ISessionService, SessionService>();
-builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
+builder.Services.AddSingleton<IEmailSender,    MailKitEmailSender>();
 
 var app = builder.Build();
 
@@ -63,7 +66,6 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 
-await DoStartupThingsOnApp(app);
 await SeedRolesAndAdminAsync(app.Services);
 
 app.Run();
@@ -92,16 +94,9 @@ static async Task SeedRolesAndAdminAsync(IServiceProvider services)
             activatorGuid: activatorGuid
         );
         adminUser.SetActive(activatorGuid);
+        await sessionService.PrepareUserTables(adminUser);
         await sessionService.AddNewUser(adminUser);
         Console.WriteLine($"Admin user created with login: {adminUser.login}");
         Console.WriteLine($"Default password: {adminPassword}");
-    }
-}
-static async Task DoStartupThingsOnApp(WebApplication app)
-{
-    using (var scope = app.Services.CreateScope())
-    {
-        var settings = scope.ServiceProvider.GetRequiredService<ISystemSettingsService>();
-        await settings.InitSettings();
     }
 }

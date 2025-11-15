@@ -2,10 +2,15 @@
 
 @using Magazynek.Entities
 @using Magazynek.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
 @inject IJSRuntime JS
 @inject IProductService ProductService
 @inject ISystemSettingsService SystemSettingsService
+
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+@inject NavigationManager NavigationManager
 
 
 <PageTitle>Produkty</PageTitle>
@@ -99,8 +104,16 @@
     }
 
     protected override async Task OnParametersSetAsync() {
+        User? loggedUser = await SessionService.GetLoggedUser(SessionStorage);
+        if(loggedUser == null)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+
         products = (await ProductService.Get()).OrderBy(p=>p.type).ToList();
-        settings = await SystemSettingsService.GetSettings();
+        settings = await SystemSettingsService.GetSettings(loggedUser);
         productTypes = settings.GetSettingByType(SystemSetting.SettingName.Typy_produktów)?.A_Value ?? new List<string>();
 
         productTypes.Sort();

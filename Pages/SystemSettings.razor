@@ -59,7 +59,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Aktywny</th>
-                    <th class="button-th buttons-1">Akcje</th>
+                    <th class="button-th buttons-2">Akcje</th>
                 </tr>
             </thead>
             <tbody>
@@ -71,6 +71,10 @@
                             <BoolPresentation Value="@u.active"/>
                         </td>
                         <td>
+                            <button class="btn btn-primary" @onclick="() => SessionService.DeactivateUser(u)">
+                                <i class="fa-solid fa-toggle-off"></i>
+                            </button>
+
                             <button class="btn btn-danger" @onclick="() => SessionService.Admin_DeleteUser(u)">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
