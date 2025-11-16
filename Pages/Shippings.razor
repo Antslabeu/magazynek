@@ -2,9 +2,13 @@
 @using Magazynek.Entities
 @using Magazynek.Services
 @using Magazynek.Data
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
 @inject IShippingEntryService ShippingEntryService
 @inject IProductService       ProductService
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+@inject NavigationManager NavigationManager
 
 
 <PageTitle>Ilości</PageTitle>
@@ -126,6 +130,8 @@
     private bool isLoading = false;
     private int currentRefreshingIndex = 1;
 
+    User? loggedUser;
+
     private IEnumerable<ShippingEntryViewModel>? filteredShippings;
 
     private void SearchChanged(string query) {
@@ -139,25 +145,36 @@
         StateHasChanged();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        await base.OnAfterRenderAsync(firstRender);
+        if(firstRender)
+        {
+            loggedUser = await SessionService.GetLoggedUser(SessionStorage);
+            if(loggedUser == null) return;
+
+            allProducts = await ProductService.Get(loggedUser);
+            shippingEntries = (await ShippingEntryService.GetModels(loggedUser)).OrderBy(se => se.product.name).ToList();
+
+            foreach(Product p in allProducts)
+            {
+                ShippingEntryViewModel? entry = shippingEntries.FirstOrDefault(se => se.product.id == p.id);
+                if(p.tmeID != null && entry == null)
+                {
+                    ShippingEntryViewModel newEmptyEntry = ShippingEntryViewModel.Empty();
+                    newEmptyEntry.product = p;
+
+                    entry = await ShippingEntryService.UpdateInfoOrInsertNew(newEmptyEntry);
+                    shippingEntries.Add(entry);
+                }
+            }
+
+            SearchChanged(searchTerm);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
-        allProducts = await ProductService.Get();
-        shippingEntries = (await ShippingEntryService.GetModels()).OrderBy(se => se.product.name).ToList();
-
-        foreach(Product p in allProducts)
-        {
-            ShippingEntryViewModel? entry = shippingEntries.FirstOrDefault(se => se.product.id == p.id);
-
-            if(p.tmeID != null && entry == null)
-            {
-                ShippingEntryViewModel newEmptyEntry = ShippingEntryViewModel.Empty();
-                newEmptyEntry.product = p;
-
-                entry = await ShippingEntryService.UpdateInfoOrInsertNew(newEmptyEntry);
-                shippingEntries.Add(entry);
-            }
-        }
-
+        await Task.Delay(0); // warning silencer
         searchBarButtons = new List<SearchBar.SearchBarButtonItem> {
             new SearchBar.SearchBarButtonItem {
                 Class = "btn-success",
@@ -170,8 +187,6 @@
                 OnClick = EventCallback.Factory.Create(this, RefreshValues)
             }
         };
-
-        SearchChanged(searchTerm);
     }
 
     private void AddNew() => editingEntry = ShippingEntryViewModel.Empty();
@@ -192,7 +207,7 @@
         else shippingEntries.Add(newEntry);
         editingEntry = null;
 
-        shippingEntries = (await ShippingEntryService.GetModels()).OrderBy(se => se.product.name).ToList();
+        shippingEntries = (await ShippingEntryService.GetModels(loggedUser!)).OrderBy(se => se.product.name).ToList();
         
         StateHasChanged();
     }

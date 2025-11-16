@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Magazynek.Entities
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+@using System.Reflection
 
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
@@ -21,7 +22,7 @@
         @Body
     </div>
     <footer>
-        Magazynek™ © @(DateTime.Now.Year) Ants Lab. All rights reserved. 
+        Magazynek™ © @(DateTime.Now.Year) Ants Lab. All rights reserved. Wersja: @AppVersion
     </footer>
 </div>
 <div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
@@ -33,6 +34,13 @@
 
     Session? activeSession;
 
+    private string AppVersion 
+    {
+        get {
+            var asm = Assembly.GetExecutingAssembly();
+            return asm.GetName().Version?.ToString()?? "0.0.0";
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         activeSession = await SessionService.GetOrCreateSession(SessionStorage);

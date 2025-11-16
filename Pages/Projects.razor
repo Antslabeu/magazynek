@@ -137,9 +137,11 @@
         : projects.Where(p => p.name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnParametersSetAsync() {
-        projects = await ProjectService.Get();
+        await Task.Delay(0); // warning silencer
+        
+        @* projects = await ProjectService.Get();
         products = (await ProductService.Get()).OrderBy(p => p.name).ToList();
-        shippingEntries = await ShippingEntryService.GetModels();
+        shippingEntries = await ShippingEntryService.GetModels(); *@
     }
     private void CloseEditModal() {
         editingProject = null;

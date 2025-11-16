@@ -17,6 +17,7 @@
   --accent-success-dark: #4ecf78;
 
   /* ==== Text colors ==== */
+  --text-error: #000;
   --text-main: #ffffff;
   --text-dim: rgba(255, 255, 255, 0.75);
   --text-muted: rgba(255, 255, 255, 0.5);

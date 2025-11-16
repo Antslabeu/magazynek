@@ -24,14 +24,16 @@
     <table class="table table-dark table-striped table-hover align-middle">
         <thead class="table-dark border-bottom border-light">
             <tr>
-                <th>Typ</th>
-                <th>Nazwa</th>
-                <th>Aktywny</th>
-                <th>Opis</th>
-                <th>Obudowa</th>
-                @* <th>Farnell ID</th> *@
-                <th>TME ID</th>
-                <th class="button-th buttons-3">Akcje</th>
+                @if(headerNames.Count == 6)
+                {
+                    <th>@headerNames[0]</th>
+                    <th>@headerNames[1]</th>
+                    <th>@headerNames[2]</th>
+                    <th>@headerNames[3]</th>
+                    <th>@headerNames[4]</th>
+                    <th>@headerNames[5]</th>
+                    <th class="button-th buttons-3">Akcje</th>
+                }
             </tr>
         </thead>
         <tbody>
@@ -45,7 +47,6 @@
                         <td><BoolPresentation Value="product.active" /></td>
                         <td>@product.description</td>
                         <td>@product.package</td>
-                        @* <td>@product.farnellID</td> *@
                         <td>@product.tmeID</td>
                         <td class="buttons-td">
                             <button class="btn btn-success" @onclick="() => Copy(product)">
@@ -63,21 +64,79 @@
             }
         </tbody>
     </table>
-    <EditModal
-        Title="@(editingProductIsNew ? "Dodaj produkt" : "Modyfikuj produkt")"
-        Model="editingProduct"
-        OnSubmit="@SaveProduct"
-        OnModalClose="@CloseEditModal"
-        DropdownOptions="@dropdowns"
-        @ref="ModalRef"
-    />
+</div>
+
+
+<div class="modal @(editingProduct!=null?"show":"")" style="">
+    <div class="modal-dialog">
+        <div class="modal-content text-light bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    @(editingProductIsNew ? "Dodaj produkt" : "Modyfikuj produkt")
+                </h5>
+                <button type="button" class="btn-close" @onclick="CloseEditModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if(editingProduct != null)
+                {
+
+                    <EditForm Model="@editingProduct" OnValidSubmit="SaveProduct">
+                        <div class="form-table">
+                            <label class="form-label">@headerNames[0]</label>
+                            <select @bind="editingProduct.type" class="form-control">
+                                <option value="">Wybierz...</option>
+                                @foreach(string option in productTypes)
+                                {
+                                    <option value="@option">@option</option>
+                                }
+                            </select>
+
+                            <label class="form-label">@headerNames[1]</label>
+                            <input 
+                                type="text"
+                                class="form-control" 
+                                @bind="editingProduct.name" />
+                            
+                            <label class="form-label">@headerNames[2]</label>
+                            <BetterChecker 
+                                IsChecked="@editingProduct.active"
+                                IsCheckedChanged="@((bool val) => editingProduct.active = val)" />
+
+                            <label class="form-label">@headerNames[3]</label>
+                            <input 
+                                type="text"
+                                class="form-control" 
+                                @bind="editingProduct.description" />
+
+                            <label class="form-label">@headerNames[4]</label>
+                            <input 
+                                type="text"
+                                class="form-control" 
+                                @bind="editingProduct.package" />
+
+                            <label class="form-label">@headerNames[5]</label>
+                            <input 
+                                type="text"
+                                class="form-control" 
+                                @bind="editingProduct.tmeID" />
+                        </div>
+
+                        <button type="submit" class="btn btn-success space-top lg">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+                    </EditForm>
+                }
+            </div>
+        </div>
+    </div>
 </div>
 
 
 @code {
     List<SearchBar.SearchBarButtonItem>? searchBarButtons;
 
-    private EditModal? ModalRef;
     private string searchTerm = "";
     private ProductViewModel? editingProduct = null;
     private bool editingProductIsNew = false;
@@ -86,10 +145,11 @@
 
     private List<SystemSetting> settings = new List<SystemSetting>();
     List<string> productTypes = new List<string>();
-    
-    private IEnumerable<Product>? filteredProducts;
+    List<string> headerNames = new List<string> ();
 
-    private Dictionary<string, List<string>> dropdowns = new Dictionary<string, List<string>>();
+    User? loggedUser;
+
+    private IEnumerable<Product>? filteredProducts;
 
     private void SearchChanged(string query) {
         searchTerm = query;
@@ -103,23 +163,6 @@
         StateHasChanged();
     }
 
-    protected override async Task OnParametersSetAsync() {
-        User? loggedUser = await SessionService.GetLoggedUser(SessionStorage);
-        if(loggedUser == null)
-        {
-            NavigationManager.NavigateTo("/");
-            return;
-        }
-
-
-        products = (await ProductService.Get()).OrderBy(p=>p.type).ToList();
-        settings = await SystemSettingsService.GetSettings(loggedUser);
-        productTypes = settings.GetSettingByType(SystemSetting.SettingName.Typy_produktów)?.A_Value ?? new List<string>();
-
-        productTypes.Sort();
-        dropdowns.Add("type", productTypes);
-        SearchChanged("");
-    }
     protected override void OnInitialized() {
         searchBarButtons = new List<SearchBar.SearchBarButtonItem> {
             new SearchBar.SearchBarButtonItem {
@@ -129,10 +172,30 @@
             }
         };
     }
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        await base.OnAfterRenderAsync(firstRender);
+        if(firstRender)
+        {
+            loggedUser = await SessionService.GetLoggedUser(SessionStorage);
+            if(loggedUser == null) return;
+
+            settings = await SystemSettingsService.GetSettings(loggedUser);
+
+            productTypes = settings.GetSettingByType(SystemSetting.SettingName.Typy_produktów)?.A_Value ?? new List<string>();
+            headerNames = settings.GetSettingByType(SystemSetting.SettingName.NameTableProduct)?.A_Value ?? new List<string>();
+
+            productTypes.Sort();
+
+            products = (await ProductService.Get(loggedUser)).OrderBy(p=>p.type).ToList();
+            SearchChanged("");
+        }
+    }
     private void Edit(Product p) {
         editingProductIsNew = false;
         editingProduct = new ProductViewModel(p);
-        ModalRef?.Show();
+        
+        JS.InvokeVoidAsync("document.body.classList.add", "modal-open");
+        StateHasChanged();
     }
     private async void Remove(Product p) {
         seletedProduct = p;
@@ -161,7 +224,6 @@
             active: p.active,
             type: p.type
         ));
-        ModalRef?.Show();
     }
     
     private void AddNew() {
@@ -177,10 +239,11 @@
                 type: Product.GetSafeDefaultType(productTypes)
             )
         );
-        ModalRef?.Show();
     }
     private void CloseEditModal() {
         editingProduct = null;
+        JS.InvokeVoidAsync("document.body.classList.remove", "modal-open");
+        StateHasChanged();
     }
     private async void SaveProduct(object _)
     {
@@ -196,7 +259,7 @@
             existingProduct.SetTmeID(newProduct.tmeID);
             existingProduct.SetType(newProduct.type);
         }
-        editingProduct = null;
+        CloseEditModal();
 
         products = products.OrderBy(p=>p.type).ToList();
 

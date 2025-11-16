@@ -15,6 +15,7 @@ public class Product
     [Column("farnellid")][Required] public string farnellID { get; private set; }
     [Column("tmeid")][Required] public string tmeID { get; private set; }
     [Required] public string type { get; private set; }
+    [Required] public Guid user { get; private set; }
 
     public Product(string name, string package, string farnellID, string tmeID, string description, bool active, string type)
     {

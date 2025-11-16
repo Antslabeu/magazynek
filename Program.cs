@@ -2,10 +2,8 @@
 using Magazynek.Data;
 using Magazynek.Entities;
 using Magazynek.Services;
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.EntityFrameworkCore;
 using Magazynek.Data.Mailer;
-using magazynek.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);

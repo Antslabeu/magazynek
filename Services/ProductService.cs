@@ -6,7 +6,7 @@ namespace Magazynek.Services
 {
     public interface IProductService
     {
-        Task<List<Product>> Get();
+        Task<List<Product>> Get(User user);
         Task<Product?> GetByID(Guid ID);
         Task<Product> UpdateInfoOrInsertNew(ProductViewModel product, bool saveChangesAsync = true);
         Task<bool> Remove(Product product, bool saveChangesAsync = true);
@@ -17,7 +17,7 @@ namespace Magazynek.Services
         readonly DatabaseContext database;
 
         public ProductService(DatabaseContext database) => this.database = database;
-        public Task<List<Product>> Get() => database.Products.ToListAsync();
+        public Task<List<Product>> Get(User user) =>  database.Products.Where(x => x.user == user.id).ToListAsync();
         public Task<Product?> GetByID(Guid id) => database.Products.FirstOrDefaultAsync(x => x.id == id);
         public async Task<Product> UpdateInfoOrInsertNew(ProductViewModel product, bool saveChangesAsync = true)
         {

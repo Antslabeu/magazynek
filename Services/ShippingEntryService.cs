@@ -7,8 +7,7 @@ namespace Magazynek.Services;
 
 public interface IShippingEntryService
 {
-    Task<List<ShippingEntry>> Get();
-    Task<List<ShippingEntryViewModel>> GetModels();
+    Task<List<ShippingEntryViewModel>> GetModels(User user);
     Task<ShippingEntryViewModel> UpdateInfoOrInsertNew(ShippingEntryViewModel product, bool saveChangesAsync = true);
     Task<ShippingEntryViewModel> RefreshValue(ShippingEntryViewModel entry, bool saveChangesAsync = true);
 }
@@ -24,12 +23,7 @@ public class ShippingEntryService : IShippingEntryService
         this.tmeService = tmeService;
     }
 
-    public async Task<List<ShippingEntry>> Get()
-    {
-        await using var database = await dbContextFactory.CreateDbContextAsync();
-        return await database.ShippingEntries.ToListAsync();
-    }
-    public async Task<List<ShippingEntryViewModel>> GetModels()
+    public async Task<List<ShippingEntryViewModel>> GetModels(User user)
     {
         await using var database = await dbContextFactory.CreateDbContextAsync();
 
