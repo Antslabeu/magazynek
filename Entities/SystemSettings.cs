@@ -14,6 +14,7 @@ namespace Magazynek.Entities
             TME_API_token,
             Typy_produktów,
             NameTableProduct,
+            NameTableShipping,
         };
         public enum SettingType
         {
@@ -22,7 +23,7 @@ namespace Magazynek.Entities
             BOOL,
             FLOAT,
             ARRAY,
-            ARRAY_STATIC_SIZE_6
+            ARRAY_STATIC_SIZE
         }
 
 

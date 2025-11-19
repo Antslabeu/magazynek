@@ -8,7 +8,7 @@ namespace Magazynek.Services;
 public interface IShippingEntryService
 {
     Task<List<ShippingEntryViewModel>> GetModels(User user);
-    Task<ShippingEntryViewModel> UpdateInfoOrInsertNew(ShippingEntryViewModel product, bool saveChangesAsync = true);
+    Task<ShippingEntryViewModel> UpdateInfoOrInsertNew(ShippingEntryViewModel model, User user, bool saveChangesAsync = true);
     Task<ShippingEntryViewModel> RefreshValue(ShippingEntryViewModel entry, bool saveChangesAsync = true);
 }
 
@@ -28,21 +28,20 @@ public class ShippingEntryService : IShippingEntryService
         await using var database = await dbContextFactory.CreateDbContextAsync();
 
         List<ShippingEntryViewModel> models = new();
-        List<ShippingEntry> entries = await database.ShippingEntries.ToListAsync();
-        List<Product> products = await database.Products.ToListAsync();
+        List<ShippingEntry> entries = await database.ShippingEntries.Where(x => x.user == user.id).ToListAsync();
         foreach (ShippingEntry entry in entries)
         {
-            Product? product = products.FirstOrDefault(p => p.id == entry.item);
+            Product? product = await database.Products.FirstOrDefaultAsync(x => x.user == user.id && x.id == entry.item);
             if (product == null) continue;
             models.Add(new ShippingEntryViewModel(entry, product));
         }
         return models;
     }
-    public async Task<ShippingEntryViewModel> UpdateInfoOrInsertNew(ShippingEntryViewModel model, bool saveChangesAsync = true)
+    public async Task<ShippingEntryViewModel> UpdateInfoOrInsertNew(ShippingEntryViewModel model, User user, bool saveChangesAsync = true)
     {
         await using var database = await dbContextFactory.CreateDbContextAsync();
 
-        ShippingEntry? entryWithSameProduct = await database.ShippingEntries.FirstOrDefaultAsync(x => x.item == model.product.id);
+        ShippingEntry? entryWithSameProduct = await database.ShippingEntries.FirstOrDefaultAsync(x => x.item == model.product.id && x.user == user.id);
 
         if (entryWithSameProduct != null)
         {
@@ -74,7 +73,7 @@ public class ShippingEntryService : IShippingEntryService
         }
         else
         {
-            dbEntry = new ShippingEntry(model.product.id, (uint)model.quantity, DateTime.UtcNow, stockValue, priceValue);
+            dbEntry = new ShippingEntry(model.product.id, (uint)model.quantity, DateTime.UtcNow, stockValue, priceValue, user);
             await database.ShippingEntries.AddAsync(dbEntry);
         }
         await database.SaveChangesAsync();

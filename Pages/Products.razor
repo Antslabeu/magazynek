@@ -67,7 +67,7 @@
 </div>
 
 
-<div class="modal @(editingProduct!=null?"show":"")" style="">
+<div class="modal @(editingProduct!=null?"show":"")">
     <div class="modal-dialog">
         <div class="modal-content text-light bg-dark">
             <div class="modal-header">
@@ -81,11 +81,18 @@
             <div class="modal-body">
                 @if(editingProduct != null)
                 {
+                    Guid g0 = Guid.NewGuid();
+                    Guid g1 = Guid.NewGuid();
+                    Guid g2 = Guid.NewGuid();
+                    Guid g3 = Guid.NewGuid();
+                    Guid g4 = Guid.NewGuid();
+                    Guid g5 = Guid.NewGuid();
+
 
                     <EditForm Model="@editingProduct" OnValidSubmit="SaveProduct">
                         <div class="form-table">
-                            <label class="form-label">@headerNames[0]</label>
-                            <select @bind="editingProduct.type" class="form-control">
+                            <label class="form-label" for="@g0">@headerNames[0]</label>
+                            <select @bind="editingProduct.type" id="@g0" class="form-control">
                                 <option value="">Wybierz...</option>
                                 @foreach(string option in productTypes)
                                 {
@@ -93,33 +100,37 @@
                                 }
                             </select>
 
-                            <label class="form-label">@headerNames[1]</label>
+                            <label class="form-label" for="@g1">@headerNames[1]</label>
                             <input 
                                 type="text"
-                                class="form-control" 
+                                class="form-control"
+                                id="@g1"
                                 @bind="editingProduct.name" />
                             
-                            <label class="form-label">@headerNames[2]</label>
-                            <BetterChecker 
+                            <label class="form-label" for="@g2">@headerNames[2]</label>
+                            <BetterChecker
                                 IsChecked="@editingProduct.active"
                                 IsCheckedChanged="@((bool val) => editingProduct.active = val)" />
 
-                            <label class="form-label">@headerNames[3]</label>
+                            <label class="form-label" for="@g3">@headerNames[3]</label>
                             <input 
                                 type="text"
                                 class="form-control" 
+                                id="@g3"
                                 @bind="editingProduct.description" />
 
-                            <label class="form-label">@headerNames[4]</label>
+                            <label class="form-label" for="@g4">@headerNames[4]</label>
                             <input 
                                 type="text"
                                 class="form-control" 
+                                id="@g4"
                                 @bind="editingProduct.package" />
 
-                            <label class="form-label">@headerNames[5]</label>
+                            <label class="form-label" for="@g5">@headerNames[5]</label>
                             <input 
                                 type="text"
                                 class="form-control" 
+                                id="@g5"
                                 @bind="editingProduct.tmeID" />
                         </div>
 
@@ -222,7 +233,8 @@
             tmeID: p.tmeID,
             description: p.description,
             active: p.active,
-            type: p.type
+            type: p.type,
+            user: loggedUser!.id
         ));
     }
     
@@ -236,7 +248,8 @@
                 tmeID: "",
                 description: "",
                 active: false, 
-                type: Product.GetSafeDefaultType(productTypes)
+                type: Product.GetSafeDefaultType(productTypes),
+                user: loggedUser!.id
             )
         );
     }

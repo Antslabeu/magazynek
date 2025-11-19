@@ -17,7 +17,7 @@ public class Product
     [Required] public string type { get; private set; }
     [Required] public Guid user { get; private set; }
 
-    public Product(string name, string package, string farnellID, string tmeID, string description, bool active, string type)
+    public Product(string name, string package, string farnellID, string tmeID, string description, bool active, string type, Guid user)
     {
         this.id = Guid.NewGuid();
         this.name = name;
@@ -27,6 +27,7 @@ public class Product
         this.description = description;
         this.active = active;
         this.type = type;
+        this.user = user;
     }
     protected Product(ProductViewModel model)
     {
@@ -38,9 +39,10 @@ public class Product
         this.description = model.description;
         this.active = model.active;
         this.type = model.type;
+        this.user = model.user;
     }
 
-    protected Product()
+    protected Product(User user)
     {
         this.id = Guid.Empty;
         this.name = "";
@@ -50,10 +52,11 @@ public class Product
         this.description = "";
         this.active = true;
         this.type = "NO TYPE";
+        this.user = user.id;
     }
-    public static Product Temporary()
+    public static Product Temporary(User user)
     {
-        return new Product();
+        return new Product(user);
     }
 
     public void SetName(string name) => this.name = name;
@@ -77,14 +80,15 @@ public class Product
 
 public class ProductViewModel
 {
-    [EditableField("Id", IsEditable: false)] public Guid id { get; private set; }
-    [EditableField("Typ", IsEditable: true, EditableFieldAttribute.InputType.Dropdown)] public string type { get; set; }
-    [EditableField("Nazwa", IsEditable: true)] public string name { get; set; } = "";
-    [EditableField("Opis", IsEditable: true)] public string description { get; set; } = "";
-    [EditableField("Obudowa", IsEditable: true)] public string package { get; set; } = "";
-    [EditableField("Farnell ID", IsEditable: true)] public string farnellID { get; set; } = "";
-    [EditableField("TME ID", IsEditable: true)] public string tmeID { get; set; } = "";
-    [EditableField("Aktywny", IsEditable: true, EditableFieldAttribute.InputType.Checkbox)] public bool active { get; set; }
+    public Guid id { get; private set; }
+    public string type { get; set; }
+    public string name { get; set; } = "";
+    public string description { get; set; } = "";
+    public string package { get; set; } = "";
+    public string farnellID { get; set; } = "";
+    public string tmeID { get; set; } = "";
+    public bool active { get; set; }
+    public Guid user { get; set; }
     
 
     public ProductViewModel(Product product)
@@ -97,5 +101,6 @@ public class ProductViewModel
         this.description = product.description;
         this.active = product.active;
         this.type = product.type;
+        this.user = product.user;
     }
 }

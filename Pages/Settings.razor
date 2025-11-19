@@ -48,7 +48,7 @@
                                     @ref="editableListRef[settings[index].id]"
                                     Items="settings[index].A_Value" />
                                 break;
-                            case SystemSetting.SettingType.ARRAY_STATIC_SIZE_6:
+                            case SystemSetting.SettingType.ARRAY_STATIC_SIZE:
                                 <StaticSizeListPresentation 
                                     @ref="staticSizeLists[settings[index].id]"
                                     Items="settings[index].A_Value" />
@@ -90,7 +90,7 @@
             {
                 if(s.Type == SystemSetting.SettingType.ARRAY && !editableListRef.ContainsKey(s.id)) 
                     editableListRef.Add(s.id, null);
-                if(s.Type == SystemSetting.SettingType.ARRAY_STATIC_SIZE_6 && !staticSizeLists.ContainsKey(s.id))
+                if(s.Type == SystemSetting.SettingType.ARRAY_STATIC_SIZE && !staticSizeLists.ContainsKey(s.id))
                     staticSizeLists.Add(s.id, null);
             }
 
@@ -107,7 +107,7 @@
                 if (editableListRef.TryGetValue(setting.id, out var comp) && comp is not null)
                 setting.A_Value = comp.GetItems();
             }
-            if(setting.Type == SystemSetting.SettingType.ARRAY_STATIC_SIZE_6)
+            if(setting.Type == SystemSetting.SettingType.ARRAY_STATIC_SIZE)
             {
                 if (staticSizeLists.TryGetValue(setting.id, out var comp) && comp is not null)
                 setting.A_Value = comp.GetItems().ToList();

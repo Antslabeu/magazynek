@@ -14,9 +14,10 @@ public class ShippingEntry
     [Required] public DateTime last_check { get; private set; }
     [Required] public uint stock { get; private set; }
     [Required] public float price { get; private set; }
+    [Required] public Guid user { get; private set; }
 
     protected ShippingEntry() { }
-    public ShippingEntry(Guid item, uint quantity, DateTime last_check, uint stock, float price)
+    public ShippingEntry(Guid item, uint quantity, DateTime last_check, uint stock, float price, User user)
     {
         this.id = Guid.NewGuid();
         this.item = item;
@@ -24,6 +25,7 @@ public class ShippingEntry
         this.last_check = last_check;
         this.stock = stock;
         this.price = price;
+        this.user = user.id;
     }
     protected ShippingEntry(ShippingEntryViewModel model)
     {
@@ -33,6 +35,7 @@ public class ShippingEntry
         this.last_check = model.last_check;
         this.stock = (uint)model.stock;
         this.price = model.price;
+        this.user = model.user;
     }
 
     public void SetItem(Guid item) => this.item = item;
@@ -44,27 +47,31 @@ public class ShippingEntry
 
 public class ShippingEntryViewModel
 {
-    [EditableField("Id", IsEditable: false)] public Guid id { get; set; }
-    [EditableField("Id", IsEditable: false)] public Product product { get; set; }
+    public Guid id { get; set; }
+    [Required(ErrorMessage = "Wybierz produkt")] public Guid ProductId { get; set; }
+    public Product product { get; set; }
     public int quantity { get; set; }
     public DateTime last_check { get; set; }
     public uint stock { get; set; }
     public float price { get; set; }
     public float stockValue => quantity * price;
+    public Guid user { get; private set; }
 
     public ShippingEntryViewModel(ShippingEntry ShippingEntry, Product product)
     {
         this.id = ShippingEntry.id;
         this.product = product;
+        this.ProductId = product.id;
         this.quantity = (int)ShippingEntry.quantity;
         this.last_check = ShippingEntry.last_check;
         this.stock = ShippingEntry.stock;
         this.price = ShippingEntry.price;
+        this.user = ShippingEntry.user;
     }
     
-    public static ShippingEntryViewModel Empty() =>
+    public static ShippingEntryViewModel Empty(User user) =>
         new ShippingEntryViewModel(
-            new ShippingEntry(Guid.Empty, 0, DateTime.MinValue, 0, 0),
-            Product.Temporary()
+            new ShippingEntry(Guid.Empty, 0, DateTime.MinValue, 0, 0, user),
+            Product.Temporary(user)
         );
 }

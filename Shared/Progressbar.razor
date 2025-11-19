@@ -1,0 +1,20 @@
+@using System.ComponentModel.DataAnnotations
+
+<div class="progress" role="progressbar" aria-label="Success striped example" aria-valuenow="@currentValue" aria-valuemin="@Minimum" aria-valuemax="@Maximum">
+    <div class="progress-bar" style="width: @currentWidth%"></div>
+</div>
+
+
+@code {
+    [Parameter] [Required] public int Minimum { get; set; }
+    [Parameter] [Required] public int Maximum { get; set; }
+
+    int currentValue;
+    int currentWidth { get => (int)(((float)currentValue - Minimum) / (Maximum - Minimum) * 100f); }
+
+
+    public void SetValue(int value) {
+        currentValue = value;
+        StateHasChanged();
+    }
+}

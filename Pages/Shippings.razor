@@ -9,6 +9,8 @@
 @inject ISessionService SessionService
 @inject ProtectedSessionStorage SessionStorage
 @inject NavigationManager NavigationManager
+@inject ISystemSettingsService SystemSettingsService
+@inject IJSRuntime JS
 
 
 <PageTitle>Ilości</PageTitle>
@@ -22,14 +24,16 @@
     <table class="table table-dark table-striped table-hover align-middle">
         <thead class="table-dark border-bottom border-light">
             <tr>
-                <th>Typ</th>
-                <th>Nazwa</th>
-                <th>Opis</th>
-                <th>Obudowa</th>
-                <th>Ilość</th>
-                @* <th>Wartość</th> *@
-                <th>TME ID</th>
-                <th>Dostępność</th>
+                @if(headerNames.Count == 7)
+                {
+                    <th>@headerNames[0]</th>
+                    <th>@headerNames[1]</th>
+                    <th>@headerNames[2]</th>
+                    <th>@headerNames[3]</th>
+                    <th>@headerNames[4]</th>
+                    <th>@headerNames[5]</th>
+                    <th>@headerNames[6]</th>
+                }
             </tr>
         </thead>
         <tbody>
@@ -45,7 +49,6 @@
                         <td>@shippingEntry.product.description</td>
                         <td>@shippingEntry.product.package</td>
                         <td class="@(qtyZero? "text-danger":"")">@shippingEntry.quantity</td>
-                        @* <td>@shippingEntry.stockValue.ToString("0.00")</td> *@
                         <td>@shippingEntry.product.tmeID</td>
                         <td class="@(stockZero? "text-danger":"")">@shippingEntry.stock</td>
                     </tr>
@@ -53,76 +56,71 @@
             }
         </tbody>
     </table>
-    @* <EditModal
-        Title="Dodaj dostawę"
-        Model="editingProduct"
-        OnSubmit="@SaveProduct"
-        OnModalClose="@CloseEditModal"
-        DropdownOptions="@dropdowns"
-        @ref="ModalRef"
-    /> *@
 
-    @if (editingEntry != null)
-    {
-        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog">
-                <div class="modal-content text-light bg-dark">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Dodaj dostawę</h5>
-                        <button type="button" class="btn-close btn-close-white" @onclick="CloseAddModal"></button>
-                    </div>
-                    <div class="modal-body">
+    <div class="modal @(editingEntry != null?"show":"")">
+        <div class="modal-dialog">
+            <div class="modal-content text-light bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dodaj Dostawę</h5>
+                    <button type="button" class="btn-close" @onclick="CloseEditModal">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @if(editingEntry != null)
+                    {
+                        Guid g0 = Guid.NewGuid();
+                        Guid g1 = Guid.NewGuid();
+                        Guid g2 = Guid.NewGuid();
 
-                        @* <EditForm Model="editingEntry" OnValidSubmit="SaveEntry">
-                            <label class="form-label">Wybierz produkt</label>
-                            <InputText class="form-control mb-2" placeholder="Szukaj..." 
-                                @bind-Value="productSearch" 
-                                @oninput="e => { productSearch = e.Value?.ToString() ?? string.Empty; FilterProducts(); }" 
-                            />
-                            <select class="form-select" @onchange="OnProductSelected">
-                                @foreach (var product in filteredProducts)
-                                {
-                                    <option value="@product.id">@product.name</option>
-                                }
-                            </select>
-                            <div class="mb-3">
-                                <label class="form-label">Ilość</label>
-                                <InputNumber class="form-control" @bind-Value="editingEntry.quantity" min="0" step="1" />
+
+                        <EditForm Model="editingEntry" OnValidSubmit="SaveEntry">
+                            <div class="form-table">
+                                <label class="form-label" for="@g0">Wybierz produkt</label>
+                                <InputText class="form-control mb-2" placeholder="Szukaj..."
+                                    @bind-Value="productSearch"
+                                    @oninput="e => { productSearch = e.Value?.ToString() ?? string.Empty; FilterProducts(); }"
+                                />
+                                <label class="form-label" for="@g1"></label>
+                                <select class="form-control" id="@g1" @onchange="OnProductChanged">
+                                    @foreach (Product product in filteredProducts)
+                                    {
+                                        <option value="@product.id">@product.name</option>
+                                    }
+                                </select>
+                                <label class="form-label" for="@g2">Ilość</label>
+                                <InputNumber class="form-control" id="@g2" @bind-Value="editingEntry.quantity" min="0" step="1" />
                             </div>
-                            <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i></button>
-                        </EditForm> *@
-                    </div>
+                            <button type="submit" class="btn btn-success space-top lg"><i class="fa-solid fa-floppy-disk"></i></button>
+                        </EditForm>
+                    }
                 </div>
             </div>
         </div>
-    }
+    </div>
 
-    @if (isLoading)
-    {
-         <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog">
-                <div class="modal-content text-light bg-dark">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Pobieranie danych...</h5>
-                    </div>
-                    <div class="modal-body">
-                        <div class="progress" role="progressbar" aria-label="Success striped example" aria-valuenow="@currentRefreshingIndex" aria-valuemin="0" aria-valuemax="@shippingEntries.Count">
-                            <div class="progress-bar progress-bar-striped bg-success progress-bar-animated" style="width: @currentRefreshingIndex%"></div>
-                        </div>
-                    </div>
+    <div class="modal @(isLoading?"show":"")">
+        <div class="modal-dialog">
+            <div class="modal-content text-light bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title">Pobieranie danych...</h5>
+                </div>
+                <div class="modal-body">
+                    <Progressbar @ref="progressbar" Minimum="0" Maximum="@shippingEntries.Count" />
                 </div>
             </div>
         </div>
-    }
+    </div>
 </div>
 
 
 @code {
     private string searchTerm = string.Empty;
     List<SearchBar.SearchBarButtonItem>? searchBarButtons;
+    private string productSearch = string.Empty;
 
     private List<ShippingEntryViewModel> shippingEntries = new List<ShippingEntryViewModel>();
-    private ShippingEntryViewModel? editingEntry = null;
+    private ShippingEntryViewModel? editingEntry;
 
     private List<Product> allProducts = new List<Product>();
     private List<Product> filteredProducts = new List<Product>();
@@ -131,6 +129,10 @@
     private int currentRefreshingIndex = 1;
 
     User? loggedUser;
+    private List<SystemSetting> settings = new List<SystemSetting>();
+    List<string> headerNames = new List<string> ();
+
+    Progressbar? progressbar;
 
     private IEnumerable<ShippingEntryViewModel>? filteredShippings;
 
@@ -155,15 +157,20 @@
             allProducts = await ProductService.Get(loggedUser);
             shippingEntries = (await ShippingEntryService.GetModels(loggedUser)).OrderBy(se => se.product.name).ToList();
 
+            settings = await SystemSettingsService.GetSettings(loggedUser);
+            headerNames = settings.GetSettingByType(SystemSetting.SettingName.NameTableShipping)?.A_Value ?? new List<string>();
+
+
+            // if there is no shipping entry:
             foreach(Product p in allProducts)
             {
                 ShippingEntryViewModel? entry = shippingEntries.FirstOrDefault(se => se.product.id == p.id);
-                if(p.tmeID != null && entry == null)
+                if(entry == null)
                 {
-                    ShippingEntryViewModel newEmptyEntry = ShippingEntryViewModel.Empty();
+                    ShippingEntryViewModel newEmptyEntry = ShippingEntryViewModel.Empty(loggedUser);
                     newEmptyEntry.product = p;
 
-                    entry = await ShippingEntryService.UpdateInfoOrInsertNew(newEmptyEntry);
+                    entry = await ShippingEntryService.UpdateInfoOrInsertNew(newEmptyEntry, loggedUser);
                     shippingEntries.Add(entry);
                 }
             }
@@ -189,8 +196,27 @@
         };
     }
 
-    private void AddNew() => editingEntry = ShippingEntryViewModel.Empty();
-    private void CloseAddModal() => editingEntry = null;
+    private void FilterProducts() {
+        filteredProducts = allProducts.Where(x => x.name.Contains(productSearch)).ToList(); 
+    }
+    private void OnProductChanged(ChangeEventArgs e)
+    {
+        Guid prodGuid = Guid.Empty;
+        if(!Guid.TryParse(e.Value?.ToString(), out prodGuid)) return;
+
+        Product? p = allProducts.FirstOrDefault(x => x.id == prodGuid);
+        if(editingEntry != null && p != null) editingEntry.product = p;
+    }
+    private void AddNew() 
+    {
+        editingEntry = ShippingEntryViewModel.Empty(loggedUser!);
+        FilterProducts();
+    }
+    private void CloseEditModal() {
+        editingEntry = null;
+        JS.InvokeVoidAsync("document.body.classList.remove", "modal-open");
+        StateHasChanged();
+    }
     private async void SaveEntry(EditContext context)
     {
         if(editingEntry == null) return;
@@ -198,16 +224,14 @@
         if(editingEntry.product.id == Guid.Empty && filteredProducts.Count > 0)
             editingEntry.product = filteredProducts[0];
 
-        ShippingEntryViewModel newEntry = await ShippingEntryService.UpdateInfoOrInsertNew(editingEntry);
+        ShippingEntryViewModel newEntry = await ShippingEntryService.UpdateInfoOrInsertNew(editingEntry, loggedUser!);
         if(shippingEntries.Any(x=>x.id == newEntry.id))
         {
             var index = shippingEntries.FindIndex(x => x.id == newEntry.id);
             shippingEntries[index] = newEntry;
         } 
         else shippingEntries.Add(newEntry);
-        editingEntry = null;
-
-        shippingEntries = (await ShippingEntryService.GetModels(loggedUser!)).OrderBy(se => se.product.name).ToList();
+        CloseEditModal();
         
         StateHasChanged();
     }
@@ -230,7 +254,11 @@
 
                 lock (lockObj) currentRefreshingIndex++;
 
-                await InvokeAsync(StateHasChanged);
+                if(progressbar != null)
+                {
+                    await InvokeAsync(() => progressbar.SetValue(currentRefreshingIndex));
+                }
+                
                 return updated;
             }
             finally { semaphore.Release(); }
@@ -243,14 +271,4 @@
         isLoading = false;
         StateHasChanged();
     }
-    private void OnProductSelected(ChangeEventArgs e)
-    {
-        if(editingEntry == null) return;
-
-        var selectedId = Guid.Parse(e.Value?.ToString() ?? Guid.Empty.ToString());
-        var selectedProduct = allProducts.FirstOrDefault(p => p.id == selectedId);
-
-        if (selectedProduct != null) editingEntry.product = selectedProduct;
-    }
-
 }

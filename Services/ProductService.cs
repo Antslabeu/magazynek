@@ -41,7 +41,8 @@ namespace Magazynek.Services
                     product.tmeID,
                     product.description,
                     product.active,
-                    product.type
+                    product.type,
+                    product.user
                 );
                 await database.Products.AddAsync(dbProduct);
             }
