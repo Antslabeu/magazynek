@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BRANCH="feature/identity-system"
+#BRANCH="feature/identity-system"
+BRANCH="main"
 
 APP_DIR="/home/zuczek/dotnet/magazynek"
 PUBLISH_DIR="$APP_DIR/publish"

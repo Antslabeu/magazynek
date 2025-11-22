@@ -102,15 +102,35 @@
     {
         foreach (SystemSetting setting in settings)
         {
+
+
             if(setting.Type == SystemSetting.SettingType.ARRAY)
             {
+                List<string> newList = new List<string>();
                 if (editableListRef.TryGetValue(setting.id, out var comp) && comp is not null)
-                setting.A_Value = comp.GetItems();
+                    newList = comp.GetItems();
+
+                if(SystemSetting.HasInvalidCharacters(newList))
+                {
+                    await JS.InvokeVoidAsync("ui.toast", $"Ustawienie {setting.Name} zawiera niedozwolone znaki.", "error");
+                    return;
+                }
+
+                setting.A_Value = newList;
             }
             if(setting.Type == SystemSetting.SettingType.ARRAY_STATIC_SIZE)
             {
+                List<string> newList = new List<string>();
                 if (staticSizeLists.TryGetValue(setting.id, out var comp) && comp is not null)
-                setting.A_Value = comp.GetItems().ToList();
+                    newList = comp.GetItems().ToList();
+
+                if(SystemSetting.HasInvalidCharacters(newList))
+                {
+                    await JS.InvokeVoidAsync("ui.toast", $"Ustawienie {setting.Name} zawiera niedozwolone znaki.", "error");
+                    return;
+                }
+                 
+                setting.A_Value = newList;
             }
 
             await SystemSettingsService.SaveSetting(setting);

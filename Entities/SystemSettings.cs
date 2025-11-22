@@ -119,6 +119,11 @@ namespace Magazynek.Entities
             }
             return names;
         }
+        public static bool HasInvalidCharacters(List<string> strings)
+        {
+            foreach(var item in strings) if(item.Contains(ARRAY_SEPARATOR)) return true;
+            return false;
+        }
     }
 
     public static class SystemSettingHelper
@@ -127,5 +132,6 @@ namespace Magazynek.Entities
         {
             return list.FirstOrDefault(s => s.SName == Name);
         }
+        
     }   
 }
