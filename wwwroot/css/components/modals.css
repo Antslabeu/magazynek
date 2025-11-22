@@ -147,3 +147,37 @@ button.btn-login
 {
   width: 100%;
 }
+
+
+/* INDEX: */
+span.index-header {
+  margin-bottom: var(--space-lg);
+  display: block;
+  text-align: center;
+  font-weight: 900;
+  font-size: var(--font-size-xlg);
+}
+span.index-subheader {
+  margin-bottom: var(--space-lg);
+  display: block;
+  text-align: center;
+  font-weight: 900;
+  font-size: var(--font-size-lg);
+}
+div.modal-container {
+  display: flex;
+}
+div.modal-content.index {
+  max-height: unset;
+}
+div.modal-dialog.index {
+  flex: 1;
+  margin-bottom: var(--space-lg);
+}
+span.modal-body-index {
+
+}
+span.index-modal-text {
+  display: block;
+  padding-left: 26px;
+}

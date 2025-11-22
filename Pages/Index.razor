@@ -1,17 +1,37 @@
 ﻿@page "/"
-@using Magazynek.Entities
+
+@using Magazynek.Pages.IndexPage
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 @using Magazynek.Services
-@using Magazynek.Data
+@using Magazynek.Entities
+
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+
+
+
 
 
 
 <PageTitle>Magazynek</PageTitle>
 
 <div class="container mt-4">
-    
+    @if(loggedUser != null)
+    {
+        <span>Witaj zalogowany użyszkodniku!</span>
+    }
+    else 
+    {
+        <NotLoggedIndex></NotLoggedIndex>
+    }
 </div>
 
 
 @code {
-    
+    User? loggedUser;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        await base.OnAfterRenderAsync(firstRender);
+        loggedUser = await SessionService.GetLoggedUser(SessionStorage);
+    }
 }
