@@ -24,15 +24,9 @@
     <table class="table table-dark table-striped table-hover align-middle">
         <thead class="table-dark border-bottom border-light">
             <tr>
-                @if(headerNames.Count == 7)
+                @foreach(string name in headerNames)
                 {
-                    <th>@headerNames[0]</th>
-                    <th>@headerNames[1]</th>
-                    <th>@headerNames[2]</th>
-                    <th>@headerNames[3]</th>
-                    <th>@headerNames[4]</th>
-                    <th>@headerNames[5]</th>
-                    <th>@headerNames[6]</th>
+                    <th>@name</th>
                 }
             </tr>
         </thead>
@@ -130,7 +124,7 @@
 
     User? loggedUser;
     private List<SystemSetting> settings = new List<SystemSetting>();
-    List<string> headerNames = new List<string> ();
+    List<string> headerNames = new List<string>();
 
     Progressbar? progressbar;
 
@@ -158,7 +152,7 @@
             shippingEntries = (await ShippingEntryService.GetModels(loggedUser)).OrderBy(se => se.product.name).ToList();
 
             settings = await SystemSettingsService.GetSettings(loggedUser);
-            headerNames = settings.GetSettingByType(SystemSetting.SettingName.NameTableShipping)?.A_Value ?? new List<string>();
+            headerNames = SystemSetting.PrepareShippingNames(settings.GetSettingByType(SystemSetting.SettingName.NameTableProduct));
 
 
             // if there is no shipping entry:

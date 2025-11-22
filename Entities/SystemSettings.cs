@@ -13,8 +13,7 @@ namespace Magazynek.Entities
         {
             TME_API_token,
             Typy_produktów,
-            NameTableProduct,
-            NameTableShipping,
+            NameTableProduct
         };
         public enum SettingType
         {
@@ -26,6 +25,10 @@ namespace Magazynek.Entities
             ARRAY_STATIC_SIZE
         }
 
+        public enum SettingStaticLengths
+        {
+            NameTableProduct = 6
+        }
 
         private static readonly string ARRAY_SEPARATOR = "%()%";
         
@@ -60,10 +63,24 @@ namespace Magazynek.Entities
         {
             get
             {
-                return this.Value.Split(ARRAY_SEPARATOR).ToList(); 
+                if(this.Type == SettingType.ARRAY_STATIC_SIZE)
+                {
+                    List<string> temporary = this.Value.Split(ARRAY_SEPARATOR).ToList();
+                    if(temporary.Count != GetStaticLength(SName))
+                    {
+                        temporary = Enumerable.Repeat(string.Empty, GetStaticLength(SName)).ToList();
+                        this.Value = string.Join(ARRAY_SEPARATOR, temporary);
+                    }
+                }
+
+                return this.Value.Split(ARRAY_SEPARATOR).ToList();
             }
             set
             {
+                if(value.Count != GetStaticLength(SName) && this.Type == SettingType.ARRAY_STATIC_SIZE)
+                {
+                    value = Enumerable.Repeat(string.Empty, GetStaticLength(SName)).ToList();
+                }
                 this.Value = string.Join(ARRAY_SEPARATOR, value);
             }
         }
@@ -77,6 +94,30 @@ namespace Magazynek.Entities
             this.Value = Value;
             this.SName = sName;
             this.userID = userID;
+        }
+
+        public static int GetStaticLength(SettingName name)
+        {
+            return name switch
+            {
+                SettingName.NameTableProduct => (int)SettingStaticLengths.NameTableProduct,
+                _ => 0,
+            };
+        }
+        public static List<string> PrepareShippingNames(SystemSetting? productSettings)
+        {
+            List<string> names = new List<string>();
+            if(productSettings != null && productSettings.A_Value.Count == GetStaticLength(SettingName.NameTableProduct))
+            {
+                names.Add(productSettings.A_Value[0]); // Product type
+                names.Add(productSettings.A_Value[1]); // Product name
+                names.Add(productSettings.A_Value[3]); // Product description
+                names.Add(productSettings.A_Value[4]); // Product package
+                names.Add("Na stanie");
+                names.Add(productSettings.A_Value[5]); // Product TME ID
+                names.Add("Dostępne");
+            }
+            return names;
         }
     }
 

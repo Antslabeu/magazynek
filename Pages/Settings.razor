@@ -44,7 +44,7 @@
                                 <InputCheckbox class="form-control bg-dark text-light" @bind-Value="settings[index].B_Value" />
                                 break;
                             case SystemSetting.SettingType.ARRAY:
-                                <EditableListPresentation 
+                                <EditableListPresentation
                                     @ref="editableListRef[settings[index].id]"
                                     Items="settings[index].A_Value" />
                                 break;
