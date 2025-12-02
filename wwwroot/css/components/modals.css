@@ -73,8 +73,13 @@ div.modal-header {
     display: flex;
     justify-content: space-between;
     font-size: var(--font-size-lg);
-    width: 500px;
     flex-shrink: 0;
+}
+div.modal-header.w500 {
+    width: 500px;
+}
+div.modal-header.w700 {
+    width: 700px;
 }
 
 button.btn-close {
@@ -173,9 +178,6 @@ div.modal-content.index {
 div.modal-dialog.index {
   flex: 1;
   margin-bottom: var(--space-lg);
-}
-span.modal-body-index {
-
 }
 span.index-modal-text {
   display: block;

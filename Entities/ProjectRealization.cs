@@ -42,11 +42,11 @@ namespace Magazynek.Entities
         public int quantity { get; set; } = 1;
         public string? notes { get; set; }
 
-        public ProjectRealizationViewModel(string name)
+        public ProjectRealizationViewModel(User user, string name)
         {
             this.id = Guid.NewGuid();
             this.name = name;
-            this.project = new Project("");
+            this.project = new Project(user, "");
             this.projectID = Guid.Empty;
             this.items = new List<ProjectItem>();
             this.startDate = DateTime.Now;

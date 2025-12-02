@@ -48,6 +48,12 @@
                     </tr>
                 }
             }
+            else 
+            {
+                <td colspan="7">
+                    <Loader/>
+                </td>
+            }
         </tbody>
     </table>
 
@@ -55,7 +61,7 @@
         <div class="modal-dialog">
             <div class="modal-content text-light bg-dark">
                 <div class="modal-header">
-                    <h5 class="modal-title">Dodaj Dostawę</h5>
+                    <h5 class="modal-title">Dodaj dostawę</h5>
                     <button type="button" class="btn-close" @onclick="CloseEditModal">
                         <i class="fa-solid fa-xmark"></i>
                     </button>

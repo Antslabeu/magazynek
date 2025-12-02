@@ -155,3 +155,10 @@ div.password-strength.Enough {
 div.password-strength.Good {
     background-color: var(--accent-success);
 }
+
+.horizontal-table-bom-row {
+    margin-bottom: var(--space-md);
+    display: grid;
+    grid-template-columns: 1fr 1fr 0.1fr;
+    grid-gap: var(--space-md);
+}

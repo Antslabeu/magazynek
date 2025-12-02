@@ -70,15 +70,17 @@ public class Project
 {
     [Required] public Guid id { get; private set; }
     [Required] public string name { get; set; } = string.Empty;
+    [Required] public Guid user_id { get; set; }
 
     [NotMapped] public List<ProjectItem> items { get; private set; } = new List<ProjectItem>();
 
     protected Project() { }
-    public Project(string name)
+    public Project(User user, string name)
     {
         this.id = Guid.NewGuid();
         this.items = new List<ProjectItem>();
         this.name = name;
+        this.user_id = user.id;
     }
     public Project(Project model, List<ProjectItem>? items = null)
     {
@@ -86,6 +88,7 @@ public class Project
         this.name = model.name;
         if (items == null) this.items = new(model.items);
         else this.items = new(items);
+        this.user_id = model.user_id;
     }
     public void AddItem(Product? product, int quantity) => this.items.Add(new ProjectItem(product, quantity, this));
     public void Removeitem(ProjectItem item) => this.items.Remove(item);
@@ -98,7 +101,7 @@ public class Project
         {
             if(item.GetAvailableQuantity(shippingEntryViewModels) >= item.quantity) count += 1;
         }
-
+        if(items.Count == 0) return 0;
         return count * 100 / items.Count;
     }
     public float GetTotalValue(List<ShippingEntryViewModel> shippingEntryViewModels)

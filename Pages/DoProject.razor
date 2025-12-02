@@ -83,11 +83,11 @@
 
     protected override async Task OnParametersSetAsync() {
         realizations = await ProjectReservationService.Get();
-        projects = await ProjectService.Get();
+        @* projects = await ProjectService.Get(); *@
     }
     private void AddNew() {
         editingIsNew = true;
-        editingObject = new ProjectRealizationViewModel("");
+        @* editingObject = new ProjectRealizationViewModel(""); *@
     }
     private void CloseEditModal() {
         editingObject = null;

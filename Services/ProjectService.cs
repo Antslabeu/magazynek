@@ -6,9 +6,9 @@ namespace Magazynek.Services
 {
     public interface IProjectService
     {
-        Task<List<Project>> Get();
+        Task<List<Project>> Get(User user);
         Task<Project?> GetByID(Guid ID);
-        Task<Project> UpdateInfoOrInsertNew(Project product, bool saveChangesAsync = true);
+        Task<Project> UpdateInfoOrInsertNew(User user, Project product, bool saveChangesAsync = true);
         Task<bool> Remove(Project product, bool saveChangesAsync = true);
     }
 
@@ -18,17 +18,19 @@ namespace Magazynek.Services
 
         public ProjectService(DatabaseContext database) => this.database = database;
 
-        public async Task<List<Project>> Get()
+        public async Task<List<Project>> Get(User user)
         {
-            List<Project> projects = new List<Project>();
-            foreach (var proj in await database.Projects.ToListAsync())
+            List<Project> projects = await database.Projects
+                .Where(p => p.user_id == user.id)
+                .ToListAsync();
+
+            foreach (var proj in projects)
             {
                 List<ProjectItem> items = await database.ProjectItems.Where(pi => pi.projectID == proj.id).ToListAsync();
-                foreach (ProjectItem item in items)
-                {
+                foreach (ProjectItem item in items) {
                     item.product = await database.Products.FirstOrDefaultAsync(p => p.id == item.itemID);
+                    proj.items.Add(item);
                 }
-                projects.Add(new Project(proj, items));
             }
             return projects;
         }
@@ -42,7 +44,7 @@ namespace Magazynek.Services
             p = new Project(p, items);
             return p;
         }
-        public async Task<Project> UpdateInfoOrInsertNew(Project project, bool saveChangesAsync = true)
+        public async Task<Project> UpdateInfoOrInsertNew(User user, Project project, bool saveChangesAsync = true)
         {
             Console.WriteLine($"Updating or inserting project: {project}");
             Console.WriteLine($"With items:{Environment.NewLine}{string.Join(Environment.NewLine, project.items)}");
@@ -50,33 +52,12 @@ namespace Magazynek.Services
             Project? dbProject = await GetByID(project.id);
             if (dbProject != null)
             {
-                dbProject.name = project.name;
-
-                // Remove items that are no longer present
-                for (int i = 0; i < dbProject.items.Count; i++)
-                {
-                    if (project.items.Any(x => x.id == dbProject.items[i].id)) continue;
-                    database.ProjectItems.Remove(dbProject.items[i]);
-                    dbProject.items.Remove(dbProject.items[i]);
-                    i--;
-                }
-
-                // Update existing items or add new ones
-                foreach (var item in project.items)
-                {
-                    var existing = dbProject.items.FirstOrDefault(i => i.id == item.id);
-
-                    if (existing != null)
-                    {
-                        existing.itemID = item.itemID;
-                        existing.quantity = item.quantity;
-                    }
-                    else
-                    {
-                        dbProject.items.Add(item);
-                        await database.ProjectItems.AddAsync(item);
-                    }
-                }
+                dbProject = project;
+                
+                database.ProjectItems.RemoveRange(
+                    database.ProjectItems.Where(pi => pi.projectID == dbProject.id)
+                );
+                foreach (var item in project.items) await database.ProjectItems.AddAsync(item);
             }
             else
             {

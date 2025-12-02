@@ -2,147 +2,207 @@
 
 @using Magazynek.Entities
 @using Magazynek.Services
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+
+
+@inject IJSRuntime JS
 
 @inject IProductService ProductService
 @inject IProjectService ProjectService
 @inject IShippingEntryService ShippingEntryService
+@inject ISessionService SessionService
+@inject ProtectedSessionStorage SessionStorage
+@inject ISystemSettingsService SystemSettingsService
 
 
 <PageTitle>Projekty</PageTitle>
 
 <div class="container mt-4">
-    <div class="mb-3 searcher gap-4">
-        <input class="form-control bg-dark text-light" type="text" placeholder="Szukaj..." @bind="searchTerm" />
-        <button class="btn btn-success" @onclick="AddNew">
-            <i class="fa-solid fa-circle-plus"></i>
-        </button>
-    </div>
+
+    <SearchBar
+        OnSearchChanged="SearchChanged"
+        SearchBarButtons=@searchBarButtons
+        ItemCount="filteredProjects?.Count() ?? 0"
+    />
+
+
     <table class="table table-dark table-striped table-hover align-middle">
         <thead class="table-dark border-bottom border-light">
             <tr >
                 <th rowspan="2" class="align-middle">Nazwa</th>
                 <th rowspan="2" class="align-middle text-center" style="width:120px">Kompletność</th>
-                <th colspan="2" class="align-middle text-center">Wartość [PLN]</th>
-                <th rowspan="2" class="align-middle button-th">Akcje</th>
+                @* <th colspan="2" class="align-middle text-center">Wartość [PLN]</th> *@
+                <th rowspan="2" class="align-middle button-th buttons-2">Akcje</th>
             </tr>
             <tr>
-                <th style="width:80px" class="text-center">Brakująca</th>
-                <th style="width:80px" class="text-center">Całkowita</th>
+                @* <th style="width:80px" class="text-center">Brakująca</th>
+                <th style="width:80px" class="text-center">Całkowita</th> *@
             </tr>
         </thead>
         <tbody>
-            @foreach(Project project in filteredProjects)
+            @if(filteredProjects != null)
             {
-                <tr>
-                    <td>@project.name</td>
-                    <td class="text-center">@project.GetBoughtItemsPercentReadiness(shippingEntries) %</td>
-                    <td class="text-center">@project.GetMissingValue(shippingEntries)</td>
-                    <td class="text-center">@project.GetTotalValue(shippingEntries).ToString(format: "0.00")</td>
-                    <td class="buttons-td">
-                        <button class="btn btn-light" @onclick="() => Edit(project)">
-                            <i class="fa-solid fa-pen"></i>
-                        </button>
-                        <button class="btn btn-danger" @onclick="() => Remove(project)">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="5" class="bom-view">
-                        <div class="container text-center">
-                            <h5>Elementy BOM</h5>
-                            <div class="row row-cols-4">
-                                @foreach(ProjectItem item in project.items)
-                                {
-                                    ShippingEntryViewModel? entry = shippingEntries.FirstOrDefault(se => se.product.id == item.itemID);
-                                    int availableQty = item.GetAvailableQuantity(shippingEntries);
-                                    ProjectItem.ErrorState errorState = ProjectItem.GetErrorState(entry, item.quantity);
-
-                                    <div class="col bom-item @(errorState switch
+                @foreach(Project project in filteredProjects)
+                {
+                    <tr>
+                        <td>@project.name</td>
+                        <td class="text-center">@project.GetBoughtItemsPercentReadiness(shippingEntries) %</td>
+                        @* <td class="text-center">@project.GetMissingValue(shippingEntries)</td> *@
+                        @* <td class="text-center">@project.GetTotalValue(shippingEntries).ToString(format: "0.00")</td> *@
+                        <td class="buttons-td">
+                            <button class="btn btn-light" @onclick="() => Edit(project)">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button class="btn btn-danger" @onclick="() => Remove(project)">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="bom-view">
+                            <div class="container text-center">
+                                <h5>Elementy BOM</h5>
+                                <div class="row row-cols-4">
+                                    @foreach(ProjectItem item in project.items)
                                     {
-                                        ProjectItem.ErrorState.NotInStockAtAll => "text-danger",
-                                        ProjectItem.ErrorState.NotEnoughBought => "text-warning",
-                                        _ => "text-success"
-                                    })">
-                                        <p>@item.product?.name</p>
-                                        <p>@availableQty / @item.quantity</p>
-                                    </div>
-                                }
+                                        ShippingEntryViewModel? entry = shippingEntries.FirstOrDefault(se => se.product.id == item.itemID);
+                                        int availableQty = item.GetAvailableQuantity(shippingEntries);
+                                        ProjectItem.ErrorState errorState = ProjectItem.GetErrorState(entry, item.quantity);
+
+                                        <div class="col bom-item @(errorState switch
+                                        {
+                                            ProjectItem.ErrorState.NotInStockAtAll => "text-danger",
+                                            ProjectItem.ErrorState.NotEnoughBought => "text-warning",
+                                            _ => "text-success"
+                                        })">
+                                            <p>@item.product?.name</p>
+                                            <p>@availableQty / @item.quantity</p>
+                                        </div>
+                                    }
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                </tr>
+                        </td>
+                    </tr>
+                }
+            }
+            else 
+            {
+                <td colspan="7">
+                    <Loader/>
+                </td>
             }
         </tbody>
     </table>
 
-    @if (editingProject != null)
-    {
-    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+
+    <div class="modal @(editingProject != null ? "show" : "")">
         <div class="modal-dialog">
             <div class="modal-content text-light bg-dark">
-                <div class="modal-header">
+                <div class="modal-header w700">
                     <h5 class="modal-title">
                         @(editingIsNew ? "Dodaj projekt" : "Modyfikuj projekt")
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CloseEditModal"></button>
+                    <button type="button" class="btn-close" @onclick="CloseEditModal">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
                 <div class="modal-body">
-                    <EditForm Model="editingProject" OnValidSubmit="Save" >
-                        <div class="mb-3">
-                            <label class="form-label">Nazwa</label>
-                            <InputText class="form-control" @bind-Value="editingProject.name" />
-                        </div>
-                        <div class="mb-3">
-                            <span class="form-label">BOM</span>
-                            @for(int i = 0; i < editingProject.items.Count; i++)
-                            {
-                                int index = i;
-                                <div class="horizontal gap-3">
-                                    <InputSelect class="form-select" @bind-Value="editingProject.items[index].itemID">
-                                        <option value="@Guid.Empty">Wybierz produkt</option>
-                                        @foreach (Product product in products)
-                                        {
-                                            <option value="@product.id">@product.name</option>
-                                        }
-                                    </InputSelect>
-                                    <InputNumber class="form-control" @bind-Value="editingProject.items[index].quantity" />
-                                    <button type="button" class="btn btn-danger" @onclick="() => editingProject.Removeitem(editingProject.items[index])">
-                                        <i class="fa-solid fa-trash"></i>
+                    @if(headerNames != null && editingProject != null)
+                    {
+                        Guid g0 = Guid.NewGuid();
+                        Guid g1 = Guid.NewGuid();
+                        
+                        <EditForm Model="@editingProject" OnValidSubmit="Save">
+                            <div class="form-table">
+                                <label class="form-label" for="@g0">Nazwa</label>    
+                                <InputText id="@g0" class="form-control" @bind-Value="editingProject.name" />
+                                
+                                <label class="form-label" for="@g1">BOM</label>   
+                                <div class="form-table-bom" id="@g1">
+                                    @for(int i = 0; i < editingProject.items.Count; i++)
+                                    {
+                                        int index = i;
+                                        <div class="horizontal-table-bom-row">
+                                            <InputSelect class="form-control" @bind-Value="editingProject.items[index].itemID">
+                                                <option value="@Guid.Empty">Wybierz produkt</option>
+                                                @foreach (Product product in products)
+                                                {
+                                                    <option value="@product.id">@product.name</option>
+                                                }
+                                            </InputSelect>
+                                            <InputNumber class="form-control" min="1" @bind-Value="editingProject.items[index].quantity" />
+                                            <button type="button" class="btn btn-danger" @onclick="() => editingProject.Removeitem(editingProject.items[index])">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                    <button type="button" class="btn btn-success btn-row-add" @onclick="AddRow">
+                                        <i class="fa-solid fa-circle-plus"></i>
                                     </button>
                                 </div>
-                            }
-                            <button type="button" class="btn btn-success btn-row-add" @onclick="AddRow"><i class="fa-solid fa-circle-plus"></i></button>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i></button>
-                    </EditForm>
+                            </div>
+
+                            <button type="submit" class="btn btn-success space-top lg">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
+                        </EditForm>
+                    }
                 </div>
             </div>
         </div>
     </div>
-    }
 </div>
 
 @code {
-    private string searchTerm = "";
     private Project? editingProject = null;
     private bool editingIsNew = false;
     private List<Project> projects = new List<Project>();
+    private IEnumerable<Project>? filteredProjects;
     private List<Product> products = new List<Product>();
     private List<ShippingEntryViewModel> shippingEntries = new List<ShippingEntryViewModel>();
 
-    private IEnumerable<Project> filteredProjects => string.IsNullOrWhiteSpace(searchTerm)
-        ? projects
-        : projects.Where(p => p.name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+    User? loggedUser;
 
-    protected override async Task OnParametersSetAsync() {
-        await Task.Delay(0); // warning silencer
-        
-        @* projects = await ProjectService.Get();
-        products = (await ProductService.Get()).OrderBy(p => p.name).ToList();
-        shippingEntries = await ShippingEntryService.GetModels(); *@
+    List<SearchBar.SearchBarButtonItem>? searchBarButtons;
+    private string searchTerm = "";
+
+    private List<SystemSetting> settings = new List<SystemSetting>();
+    SystemSetting? headerNames;
+
+    private void SearchChanged(string query) {
+        searchTerm = query;
+        filteredProjects = projects
+            .Where(p => string.IsNullOrWhiteSpace(query) || 
+            p.name.Contains(query, StringComparison.OrdinalIgnoreCase));
+        StateHasChanged();
     }
+
+    protected override void OnInitialized() {
+        searchBarButtons = new List<SearchBar.SearchBarButtonItem> {
+            new SearchBar.SearchBarButtonItem {
+                Class = "btn-success",
+                Icon = "fa-solid fa-plus",
+                OnClick = EventCallback.Factory.Create(this, AddNew)
+            }
+        };
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        await base.OnAfterRenderAsync(firstRender);
+        if(firstRender)
+        {
+            loggedUser = await SessionService.GetLoggedUser(SessionStorage);
+            if(loggedUser == null) return;
+
+            settings = await SystemSettingsService.GetSettings(loggedUser);
+            products = await ProductService.Get(loggedUser);
+            projects = await ProjectService.Get(loggedUser);
+
+            headerNames = settings.GetSettingByType(SystemSetting.SettingName.NameTableProduct);
+            SearchChanged("");
+        }
+    }
+
     private void CloseEditModal() {
         editingProject = null;
     }
@@ -151,24 +211,32 @@
         editingProject = new Project(p);
     }
     private async void Remove(Project p) {
+        StateHasChanged();
+        var ok = await JS.InvokeAsync<bool>(
+            "ui.confirm", 
+            "Usunąć rekord?", "Tej operacji nie można cofnąć."
+        );
+        StateHasChanged();
+        if(!ok) return;
+
         await ProjectService.Remove(p);
         projects.Remove(p);
         StateHasChanged();
     }
+    private void AddRow() {
+        if(editingProject == null) return;
+        editingProject.AddItem(null, 1);
+        StateHasChanged();
+    }
     private void AddNew() {
         editingIsNew = true;
-        editingProject = new Project("");
-    }
-    private void AddRow() {
-        if (editingProject == null) return;
-
-        editingProject.AddItem(product: null, quantity: 0);
+        editingProject = new Project(loggedUser!, "");
     }
     private async void Save(EditContext context)
     {
         if(editingProject == null) return;
 
-        Project newOne = await ProjectService.UpdateInfoOrInsertNew(editingProject);
+        Project newOne = await ProjectService.UpdateInfoOrInsertNew(loggedUser!, editingProject);
 
         Project? existingProject = projects.FirstOrDefault(x => x.id == newOne.id);
         if(existingProject == null) projects.Add(newOne);
