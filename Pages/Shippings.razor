@@ -197,7 +197,13 @@
     }
 
     private void FilterProducts() {
-        filteredProducts = allProducts.Where(x => x.name.Contains(productSearch)).ToList(); 
+        filteredProducts = allProducts.Where(
+            x => x.name.Contains(productSearch) ||
+                    x.description.Contains(productSearch) ||
+                    x.package.Contains(productSearch) ||
+                    x.tmeID.Contains(productSearch) ||
+                    x.farnellID.Contains(productSearch)
+        ).ToList(); 
     }
     private void OnProductChanged(ChangeEventArgs e)
     {
