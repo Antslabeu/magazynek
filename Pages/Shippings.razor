@@ -197,13 +197,13 @@
     }
 
     private void FilterProducts() {
-        filteredProducts = allProducts.Where(
-            x => x.name.Contains(productSearch) ||
-                    x.description.Contains(productSearch) ||
-                    x.package.Contains(productSearch) ||
-                    x.tmeID.Contains(productSearch) ||
-                    x.farnellID.Contains(productSearch)
-        ).ToList(); 
+        filteredProducts = allProducts.Where(x =>
+            (x.name?.Contains(productSearch, StringComparison.OrdinalIgnoreCase) == true) ||
+            (x.description?.Contains(productSearch, StringComparison.OrdinalIgnoreCase) == true) ||
+            (x.package?.Contains(productSearch, StringComparison.OrdinalIgnoreCase) == true) ||
+            (x.tmeID?.Contains(productSearch, StringComparison.OrdinalIgnoreCase) == true) ||
+            (x.farnellID?.Contains(productSearch, StringComparison.OrdinalIgnoreCase) == true)
+        ).ToList();
     }
     private void OnProductChanged(ChangeEventArgs e)
     {
