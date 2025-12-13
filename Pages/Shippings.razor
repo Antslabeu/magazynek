@@ -141,6 +141,7 @@
         filteredShippings = shippingEntries
              .Where(e => string.IsNullOrWhiteSpace(query) ||
                     e.product.name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    e.product.type.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                     e.product.package.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                     e.product.farnellID.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                     e.product.tmeID.Contains(query, StringComparison.OrdinalIgnoreCase));
@@ -153,6 +154,7 @@
         {
             loggedUser = await SessionService.GetLoggedUser(SessionStorage);
             if(loggedUser == null) return;
+
 
             allProducts = await ProductService.Get(loggedUser);
             shippingEntries = (await ShippingEntryService.GetModels(loggedUser)).OrderBy(se => se.product.name).ToList();
@@ -174,6 +176,8 @@
                     shippingEntries.Add(entry);
                 }
             }
+
+            shippingEntries = shippingEntries.OrderBy(se => se.product.type).ToList();
 
             SearchChanged(searchTerm);
         }
@@ -245,7 +249,7 @@
     private async Task RefreshValues()
     {
         if(loggedUser == null) return;
-        
+
         isLoading = true;
         currentRefreshingIndex = 0;
         StateHasChanged();
