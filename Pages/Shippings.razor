@@ -244,6 +244,8 @@
     }
     private async Task RefreshValues()
     {
+        if(loggedUser == null) return;
+        
         isLoading = true;
         currentRefreshingIndex = 0;
         StateHasChanged();
@@ -257,7 +259,7 @@
             await semaphore.WaitAsync();
             try
             {
-                ShippingEntryViewModel updated = await ShippingEntryService.RefreshValue(entry);
+                ShippingEntryViewModel updated = await ShippingEntryService.RefreshValue(entry, loggedUser);
 
                 lock (lockObj) currentRefreshingIndex++;
 

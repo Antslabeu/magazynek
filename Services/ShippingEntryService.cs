@@ -9,7 +9,7 @@ public interface IShippingEntryService
 {
     Task<List<ShippingEntryViewModel>> GetModels(User user);
     Task<ShippingEntryViewModel> UpdateInfoOrInsertNew(ShippingEntryViewModel model, User user, bool saveChangesAsync = true);
-    Task<ShippingEntryViewModel> RefreshValue(ShippingEntryViewModel entry, bool saveChangesAsync = true);
+    Task<ShippingEntryViewModel> RefreshValue(ShippingEntryViewModel entry, User user, bool saveChangesAsync = true);
 }
 
 public class ShippingEntryService : IShippingEntryService
@@ -53,8 +53,8 @@ public class ShippingEntryService : IShippingEntryService
 
         float priceValue = 0;
         uint stockValue = 0;
-        Price? price = await tmeService.GetPriceForAmountAsync(model.product.tmeID, (uint)model.quantity);
-        StockProduct? stock = await tmeService.GetStockProductAsync(model.product.tmeID);
+        Price? price = await tmeService.GetPriceForAmountAsync(model.product.tmeID, (uint)model.quantity, user);
+        StockProduct? stock = await tmeService.GetStockProductAsync(model.product.tmeID, user);
         if (price != null && stock != null)
         {
             priceValue = (float)price.PriceValue;
@@ -79,12 +79,12 @@ public class ShippingEntryService : IShippingEntryService
         await database.SaveChangesAsync();
         return new ShippingEntryViewModel(dbEntry, model.product);
     }
-    public async Task<ShippingEntryViewModel> RefreshValue(ShippingEntryViewModel entry, bool saveChangesAsync = true)
+    public async Task<ShippingEntryViewModel> RefreshValue(ShippingEntryViewModel entry, User user, bool saveChangesAsync = true)
     {
         await using var database = await dbContextFactory.CreateDbContextAsync();
         
-        Price? price = await tmeService.GetPriceForAmountAsync(entry.product.tmeID, (uint)entry.quantity);
-        StockProduct? stock = await tmeService.GetStockProductAsync(entry.product.tmeID);
+        Price? price = await tmeService.GetPriceForAmountAsync(entry.product.tmeID, (uint)entry.quantity, user);
+        StockProduct? stock = await tmeService.GetStockProductAsync(entry.product.tmeID, user);
         if (price == null || stock == null) return entry;
 
         ShippingEntry? dbEntry = await database.ShippingEntries.FirstOrDefaultAsync(x => x.id == entry.id);

@@ -9,13 +9,14 @@ namespace Magazynek.Services
     public interface ISystemSettingsService
     {
         Task<List<SystemSetting>> GetSettings(User user);
-        Task<T> GetSetting<T>(string name);
-        Task SaveSetting(SystemSetting systemSetting, bool saveChangesAsync = true);
+        Task<T> GetSetting<T>(string name, User user);
+        Task SaveSetting(SystemSetting systemSetting, User user, bool saveChangesAsync = true);
     }
 
 
     public class SystemSettingsService : ISystemSettingsService
     {
+        private readonly bool protectorEnabled = true;
 
         private readonly IDataProtector protector;
         private readonly IConfiguration configuration;
@@ -33,22 +34,28 @@ namespace Magazynek.Services
             await using var database = await dbContextFactory.CreateDbContextAsync();
             List<SystemSetting> settings = await database.SystemSettings.Where(s => s.userID == user.id).ToListAsync();
 
-            foreach (SystemSetting setting in settings)
+            if(protectorEnabled)
             {
-                try { setting.Value = protector.Unprotect(setting.Value); }
-                catch { setting.Value = ""; }
+                foreach (SystemSetting setting in settings)
+                {
+                    try { setting.Value = protector.Unprotect(setting.Value); }
+                    catch { setting.Value = ""; }
+                }
             }
 
             return settings;
         }
-        public async Task<T> GetSetting<T>(string name)
+        public async Task<T> GetSetting<T>(string name, User user)
         {
             await using var database = await dbContextFactory.CreateDbContextAsync();
-            SystemSetting? setting = await database.SystemSettings.FirstOrDefaultAsync(s => s.Name == name);
+            SystemSetting? setting = await database.SystemSettings.FirstOrDefaultAsync(s => s.Name == name && s.userID == user.id);
             if (setting != null)
             {
-                try { setting.Value = protector.Unprotect(setting.Value); }
-                catch { return default!; }
+                if(protectorEnabled)
+                {
+                    try { setting.Value = protector.Unprotect(setting.Value); }
+                    catch { return default!; }
+                }
 
                 return (typeof(T), setting.Type) switch
                 {
@@ -61,20 +68,23 @@ namespace Magazynek.Services
             }
             return default!;
         }
-        public async Task SaveSetting(SystemSetting systemSetting, bool saveChangesAsync = true)
+        public async Task SaveSetting(SystemSetting systemSetting, User user, bool saveChangesAsync = true)
         {
             await using var database = await dbContextFactory.CreateDbContextAsync();
 
-            SystemSetting? existingSetting = await database.SystemSettings.FirstOrDefaultAsync(s => s.Name == systemSetting.Name);
+            SystemSetting? existingSetting = await database.SystemSettings.FirstOrDefaultAsync(s => s.Name == systemSetting.Name && s.userID == user.id);
             if (existingSetting != null)
             {
                 existingSetting.Name = systemSetting.Name;
                 existingSetting.Type = systemSetting.Type;
-                existingSetting.Value = protector.Protect(systemSetting.Value);
+                if(protectorEnabled) existingSetting.Value = protector.Protect(systemSetting.Value);
+                else existingSetting.Value = systemSetting.Value;
             }
             else await database.SystemSettings.AddAsync(systemSetting);
 
-            if (saveChangesAsync) await database.SaveChangesAsync();
+            if (!saveChangesAsync) return;
+            var affected = await database.SaveChangesAsync();
+            Console.WriteLine($"SaveChanges affected: {affected}");
         }
     }
 }

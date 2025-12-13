@@ -71,7 +71,7 @@
 
     private Dictionary<Guid, StaticSizeListPresentation?> staticSizeLists = new ();
 
-
+    User? loggedUser;
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -80,7 +80,7 @@
 
         if(firstRender)
         {
-            User? loggedUser = await SessionService.GetLoggedUser(SessionStorage);
+            loggedUser = await SessionService.GetLoggedUser(SessionStorage);
             if(loggedUser == null) return;
 
             settings = await SystemSettingsService.GetSettings(loggedUser);
@@ -100,10 +100,10 @@
 
     private async Task SaveSettings()
     {
+        if(loggedUser == null) return;
+
         foreach (SystemSetting setting in settings)
         {
-
-
             if(setting.Type == SystemSetting.SettingType.ARRAY)
             {
                 List<string> newList = new List<string>();
@@ -133,7 +133,7 @@
                 setting.A_Value = newList;
             }
 
-            await SystemSettingsService.SaveSetting(setting);
+            await SystemSettingsService.SaveSetting(setting, loggedUser);
         }
         await JS.InvokeVoidAsync("ui.toast", "Zapisano", "success");
     }

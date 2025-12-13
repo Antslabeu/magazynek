@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Magazynek.Data;
+using Magazynek.Entities;
 
 namespace Magazynek.Services
 {
     public interface ITmeService
     {
-        Task<Price?> GetPriceForAmountAsync(string product, uint amount);
-        Task<StockProduct?> GetStockProductAsync(string product);
+        Task<Price?> GetPriceForAmountAsync(string product, uint amount, User user);
+        Task<StockProduct?> GetStockProductAsync(string product, User user);
     }
     public class TmeService : ITmeService
     {
@@ -19,9 +20,9 @@ namespace Magazynek.Services
         {
             this.settingsService = settingsService;
         }
-        public async Task<Price?> GetPriceForAmountAsync(string product, uint amount)
+        public async Task<Price?> GetPriceForAmountAsync(string product, uint amount, User user)
         {
-            string token = await settingsService.GetSetting<string>("TME API token");
+            string token = await settingsService.GetSetting<string>("TME API token", user);
             
             ProductPricesResponse? pricesResponse = await TmeIntegrator.GetPricesAsync([product], token);
             if (pricesResponse == null) return null;
@@ -42,9 +43,9 @@ namespace Magazynek.Services
 
             return null;
         }
-        public async Task<StockProduct?> GetStockProductAsync(string product)
+        public async Task<StockProduct?> GetStockProductAsync(string product, User user)
         {
-            string token = await settingsService.GetSetting<string>("TME API token");
+            string token = await settingsService.GetSetting<string>("TME API token", user);
 
             ProductStockResponse? stockResponse = await TmeIntegrator.GetStocksAsync([product], token);
             if (stockResponse == null) return null;
