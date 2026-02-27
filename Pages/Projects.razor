@@ -62,24 +62,38 @@
                         <td colspan="5" class="bom-view">
                             <div class="container text-center">
                                 <h5>Elementy BOM</h5>
-                                <div class="row row-cols-4">
-                                    @foreach(ProjectItem item in project.items)
-                                    {
-                                        ShippingEntryViewModel? entry = shippingEntries.FirstOrDefault(se => se.product.id == item.itemID);
-                                        int availableQty = item.GetAvailableQuantity(shippingEntries);
-                                        ProjectItem.ErrorState errorState = ProjectItem.GetErrorState(entry, item.quantity);
 
-                                        <div class="col bom-item @(errorState switch
+                                <div class="bom-grid bom-header">
+                                    <div>@headerNames[0]</div>
+                                    <div>@headerNames[1]</div>
+                                    <div>@headerNames[3]</div>
+                                    <div>Ilość</div>
+                                </div>
+                                @foreach(ProjectItem item in project.items)
+                                {
+                                    ShippingEntryViewModel? entry = shippingEntries.FirstOrDefault(se => se.product.id == item.itemID);
+                                    int availableQty = item.GetAvailableQuantity(shippingEntries);
+                                    ProjectItem.ErrorState errorState = ProjectItem.GetErrorState(entry, item.quantity);
+                                    Product? product = products.FirstOrDefault(p => p.id == item.itemID);
+                                    if(product == null)
+                                    {
+                                        <p>Produkt nieznany</p>
+                                    }
+                                    else
+                                    {
+                                        <div class="bom-grid @(errorState switch
                                         {
                                             ProjectItem.ErrorState.NotInStockAtAll => "text-danger",
                                             ProjectItem.ErrorState.NotEnoughBought => "text-warning",
                                             _ => "text-success"
                                         })">
-                                            <p>@item.product?.name</p>
-                                            <p>@availableQty / @item.quantity</p>
+                                            <div>@product.type</div>
+                                            <div>@product.name</div>
+                                            <div>@product.package</div>
+                                            <div>@availableQty / @item.quantity</div>
                                         </div>
                                     }
-                                </div>
+                                }
                             </div>
                         </td>
                     </tr>
@@ -167,7 +181,7 @@
     private string searchTerm = "";
 
     private List<SystemSetting> settings = new List<SystemSetting>();
-    SystemSetting? headerNames;
+    List<string> headerNames = new List<string>();
 
     private void SearchChanged(string query) {
         searchTerm = query;
@@ -197,8 +211,10 @@
             settings = await SystemSettingsService.GetSettings(loggedUser);
             products = await ProductService.Get(loggedUser);
             projects = await ProjectService.Get(loggedUser);
+            shippingEntries = await ShippingEntryService.GetModels(loggedUser);
 
-            headerNames = settings.GetSettingByType(SystemSetting.SettingName.NameTableProduct);
+            headerNames = SystemSetting.PrepareShippingNames(settings.GetSettingByType(SystemSetting.SettingName.NameTableProduct));
+            if(headerNames.Count != 7) throw new Exception("Nie można znaleźć ustawienia z nazwami kolumn, lub jest ono niepoprawne.");            
             SearchChanged("");
         }
     }
@@ -241,8 +257,13 @@
         Project? existingProject = projects.FirstOrDefault(x => x.id == newOne.id);
         if(existingProject == null) projects.Add(newOne);
         else {
-            existingProject.name = newOne.name;
-            existingProject.SetItems(newOne.items);
+            existingProject = await ProjectService.GetByID(existingProject.id);
+            if(existingProject == null) return;
+
+            Project? updateProject = projects.FirstOrDefault(p => p.id == existingProject.id);
+            if(updateProject == null) return;
+
+            updateProject.SetItems(existingProject.items);
         }
         
         editingProject = null;

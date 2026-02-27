@@ -92,6 +92,7 @@ public class Project
     }
     public void AddItem(Product? product, int quantity) => this.items.Add(new ProjectItem(product, quantity, this));
     public void Removeitem(ProjectItem item) => this.items.Remove(item);
+    public void ClearItems() => this.items.Clear();
     public void SetItems(List<ProjectItem> items) => this.items = items;
 
     public int GetBoughtItemsPercentReadiness(List<ShippingEntryViewModel> shippingEntryViewModels)

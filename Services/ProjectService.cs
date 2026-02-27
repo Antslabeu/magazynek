@@ -52,12 +52,16 @@ namespace Magazynek.Services
             Project? dbProject = await GetByID(project.id);
             if (dbProject != null)
             {
-                dbProject = project;
+                dbProject.name = project.name;
                 
                 database.ProjectItems.RemoveRange(
                     database.ProjectItems.Where(pi => pi.projectID == dbProject.id)
                 );
-                foreach (var item in project.items) await database.ProjectItems.AddAsync(item);
+                await database.SaveChangesAsync();
+                
+                foreach (var item in project.items) {
+                    await database.ProjectItems.AddAsync(item);
+                }
             }
             else
             {
